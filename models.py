@@ -39,9 +39,15 @@ class User(db.Model):
 
     __tablename__ = 'users'
 
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
     username = db.Column(
         db.String(16),
-        primary_key=True,
+        nullable=False,
+        unique=True,
     )
 
     email = db.Column(
@@ -49,6 +55,10 @@ class User(db.Model):
         nullable=False,
         unique=True,
     )
+
+    #establish relationship between user and buckets
+    buckets = db.relationship('Bucket', secondary='user_buckets', backref='users')
+
 
 class Bucket(db.Model):
     """Bucket to store movies"""
@@ -73,6 +83,9 @@ class Bucket(db.Model):
         db.Text,
     )
 
+    #establish relationship between buckets and movies
+    movies = db.relationship('Movie', secondary='buckets_movies', backref='buckets')
+
 class User_Buckets(db.Model):
     """Join table between users and buckets."""
 
@@ -80,7 +93,7 @@ class User_Buckets(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.username', ondelete='CASCADE'),
+        db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
         primary_key=True,
     )
