@@ -130,32 +130,3 @@ def connect_db(app):
     app.app_context().push()
     db.app = app
     db.init_app(app)
-
-
-
-# users ->> bucket
-# bucket ->> users
-
-# bucket ->> movies
-
-###MOVIES:
-# id
-# title
-# release date
-# genre
-# length
-# bio
-
-###USERS:
-# username
-# num_buckets
-# bucket_list
-# (ppl connected to?)
-
-###BUCKETS:
-# bucket_name
-# movie_list
-# FK* username
-# FK* movie_id
-# genre (optional)
-# (ppl connected to?)
