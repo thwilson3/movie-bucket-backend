@@ -34,6 +34,12 @@ class Movie(db.Model):
         db.Text,
     )
 
+    is_watched = db.Column(
+        db.Boolean,
+        default=False,
+    )
+
+
 class User(db.Model):
     """User in the system."""
 
