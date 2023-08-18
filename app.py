@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from flask_login import LoginManager, login_user
 
 from flask import (
     Flask, request, jsonify
@@ -21,6 +22,9 @@ app.config['AUTH_KEY'] = os.environ['AUTH_KEY']
 
 connect_db(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
 AUTH_KEY = app.config['AUTH_KEY']
 
 HEADERS = {
@@ -31,6 +35,40 @@ HEADERS = {
 BASE_API_URL = "https://api.themoviedb.org/3/"
 
 ########################################################
+
+@login_manager.user_loader
+def load_user(user_id):
+    user = User.query.get(int(user_id))
+    if user:
+        return user
+    else:
+        return None
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    username = data.get('username')
+
+    user = User.query.filter_by(username=f'{username}')
+
+    if user and user.is_authorized():
+        # Successfully logged in
+        login_user(user)
+        response = {
+            'message': 'Logged in successfully',
+            'success': True
+        }
+    else:
+        # Failed login
+        response = {
+            'message': 'Login failed. Please check your credentials.',
+            'success': False
+        }
+
+    return jsonify(response)
+
 
 @app.route('/api/search')
 def list_search_results():
@@ -44,3 +82,4 @@ def list_search_results():
     response = requests.get(url, params=params, headers=HEADERS)
 
     return jsonify(response.json())
+
