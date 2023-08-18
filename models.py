@@ -2,6 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+import bcrypt
 
 db = SQLAlchemy()
 
@@ -62,6 +63,42 @@ class User(db.Model, UserMixin):
         nullable=False,
         unique=True,
     )
+
+    password = db.Column(
+        db.Text,
+        nullable=False,
+    )
+
+    @classmethod
+    def signup(cls, username, email, password):
+        """Sign up user.
+
+        Hashes password and adds user to system.
+        """
+
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd,
+        )
+
+        db.session.add(user)
+        return user
+
+
+    @classmethod
+    def authenticate(cls, username, password):
+
+        user = cls.query.filter_by(username=username).first()
+
+        if user:
+            is_auth = bcrypt.check_password_hash(user.password, password)
+            if is_auth:
+                return user
+
+        return False
 
     #establish relationship between user and buckets
     buckets = db.relationship('Bucket', secondary='user_buckets', backref='users')
