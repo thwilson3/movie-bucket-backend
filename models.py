@@ -2,9 +2,10 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-import bcrypt
+from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
+bcrypt = Bcrypt()
 
 class Movie(db.Model):
 
@@ -76,7 +77,7 @@ class User(db.Model, UserMixin):
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.hashpw(password).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
 
         user = User(
             username=username,
@@ -94,7 +95,7 @@ class User(db.Model, UserMixin):
         user = cls.query.filter_by(username=username).first()
 
         if user:
-            is_auth = bcrypt.checkpw(user.password, password)
+            is_auth = bcrypt.check_password_hash(user.password, password)
             if is_auth:
                 return user
 
