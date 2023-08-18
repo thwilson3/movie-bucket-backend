@@ -15,15 +15,15 @@ movie3 = Movie(title='Movie 3', release_date='2022-03-01', runtime='130 min', ge
 db.session.add_all([movie1, movie2, movie3])
 db.session.commit()
 
-# Create some users
-user1 = User(username='user1', email='user1@example.com')
-user2 = User(username='user2', email='user2@example.com')
+# Create users
+user1 = User.signup('user1', 'user1@example.com', 'password123')
+user2 = User.signup('user2', 'user2@example.com', 'password456')
 
 # Add users to the session
 db.session.add_all([user1, user2])
 db.session.commit()
 
-# Create some buckets
+# Create buckets
 bucket1 = Bucket(bucket_name='Bucket 1', genre='Action', description='Bucket 1 description')
 bucket2 = Bucket(bucket_name='Bucket 2', genre='Comedy', description='Bucket 2 description')
 
@@ -48,4 +48,3 @@ bucket_movie3 = Buckets_Movies(bucket_id=bucket2.id, movie_id=movie3.id)
 # Add associations between buckets and movies to the session
 db.session.add_all([bucket_movie1, bucket_movie2, bucket_movie3])
 db.session.commit()
-
