@@ -42,13 +42,13 @@ BASE_API_URL = "https://api.themoviedb.org/3/"
 
 ########################################################
 
-# @login_manager.user_loader
-# def load_user(user_id):
-#     user = User.query.get(int(user_id))
-#     if user:
-#         return user
-#     else:
-#         return None
+@login_manager.user_loader
+def load_user(user_id):
+    user = User.query.get(int(user_id))
+    if user:
+        return user
+    else:
+        return None
 
 
 @app.route('/signup', methods=['GET', 'POST'])
