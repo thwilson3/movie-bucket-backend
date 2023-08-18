@@ -4,6 +4,8 @@ import requests
 from dotenv import load_dotenv
 from flask_login import LoginManager, login_user
 from sqlalchemy.exc import IntegrityError
+from flask_migrate import Migrate
+
 
 from flask import (
     Flask, request, jsonify
@@ -24,6 +26,8 @@ app.config['AUTH_KEY'] = os.environ['AUTH_KEY']
 
 connect_db(app)
 
+migrate = Migrate(app, db)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -38,17 +42,18 @@ BASE_API_URL = "https://api.themoviedb.org/3/"
 
 ########################################################
 
-@login_manager.user_loader
-def load_user(user_id):
-    user = User.query.get(int(user_id))
-    if user:
-        return user
-    else:
-        return None
+# @login_manager.user_loader
+# def load_user(user_id):
+#     user = User.query.get(int(user_id))
+#     if user:
+#         return user
+#     else:
+#         return None
 
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    print("yeeeeeeeeeeeeeeeeee")
     data = request.get_json()
 
     username = data.get('username')
