@@ -1,7 +1,9 @@
 import os
 import requests
+
 from dotenv import load_dotenv
 from flask_login import LoginManager, login_user
+from sqlalchemy.exc import IntegrityError
 
 from flask import (
     Flask, request, jsonify
@@ -45,13 +47,49 @@ def load_user(user_id):
         return None
 
 
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    data = request.get_json()
+
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    try:
+        user = User.signup(
+            username=username,
+            email=email,
+            password=password,
+        )
+
+        db.session.commit()
+        login_user(user)
+
+        response = {
+            'message': 'Sign up successful',
+            'success' : True
+        }
+
+        return jsonify(response)
+
+    except IntegrityError:
+
+        response = {
+            'message': 'Sign up failed',
+            'success' : False
+        }
+
+        return jsonify(response)
+
+
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
 
     username = data.get('username')
 
-    user = User.query.filter_by(username=f'{username}')
+    user = User.query.filter_by(username=username).first()
 
     if user and user.is_authorized():
         # Successfully logged in
