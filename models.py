@@ -1,6 +1,7 @@
 """SQLAlchemy models for Movie Bucket."""
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
@@ -40,7 +41,7 @@ class Movie(db.Model):
     )
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     """User in the system."""
 
     __tablename__ = 'users'
