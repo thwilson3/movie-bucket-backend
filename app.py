@@ -23,6 +23,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['API_KEY'] = os.environ['API_KEY']
 app.config['AUTH_KEY'] = os.environ['AUTH_KEY']
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 
 connect_db(app)
 
