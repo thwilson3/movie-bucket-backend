@@ -54,14 +54,17 @@ def load_user(user_id):
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    print("yeeeeeeeeeeeeeeeeee")
+    """Signs up a user, returns JSON w/message and success status"""
+
     data = request.get_json()
 
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
 
+    # Successful login
     try:
+
         user = User.signup(
             username=username,
             email=email,
@@ -78,6 +81,7 @@ def signup():
 
         return jsonify(response)
 
+    # Failed login
     except IntegrityError:
 
         response = {
@@ -91,20 +95,26 @@ def signup():
 
 @app.route('/login', methods=['POST'])
 def login():
+    """Authenticates user and logs them in.
+    Returns JSON w/message and success status"""
+
     data = request.get_json()
 
     username = data.get('username')
+    password = data.get('password')
 
     user = User.query.filter_by(username=username).first()
 
-    if user and user.is_authorized():
-        # Successfully logged in
+    if user and user.authenticate(username=username, password=password):
+
+        # Successful login
         login_user(user)
         response = {
             'message': 'Logged in successfully',
             'success': True
         }
     else:
+
         # Failed login
         response = {
             'message': 'Login failed. Please check your credentials.',
