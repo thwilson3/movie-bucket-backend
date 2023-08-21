@@ -1,5 +1,7 @@
 """SQLAlchemy models for Movie Bucket."""
 
+import json
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
@@ -127,6 +129,18 @@ class Bucket(db.Model):
     description = db.Column(
         db.Text,
     )
+
+    @classmethod
+    def serialize(self):
+
+        data = {
+            "id" : self.id,
+            "bucket_name" : self.bucket_name,
+            "genre" : self.genre,
+            "description" : self.description
+        }
+
+        return json.dumps(data)
 
     #establish relationship between buckets and movies
     movies = db.relationship('Movie', secondary='buckets_movies', backref='buckets')
