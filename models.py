@@ -26,24 +26,51 @@ class Movie(db.Model):
 
     release_date = db.Column(
         db.Text,
+        default=None,
     )
 
     runtime = db.Column(
         db.Text,
+        default=None,
     )
 
     genre = db.Column(
         db.Text,
+        default=None,
     )
 
     bio = db.Column(
         db.Text,
+        default=None,
     )
 
     is_watched = db.Column(
         db.Boolean,
         default=False,
     )
+
+    def serialize(self):
+        """Serializes all information tied to a movie"""
+
+        data = {
+            "id" : self.id,
+            "title" : self.title,
+            "is_watched" : self.is_watched,
+        }
+
+        if self.release_date is not None:
+            data['release_date'] = self.release_date
+
+        if self.runtime is not None:
+            data['runtime'] = self.runtime
+
+        if self.genre is not None:
+            data['genre'] = self.genre
+
+        if self.bio is not None:
+            data['bio'] = self.bio
+
+        return data
 
 
 class User(db.Model, UserMixin):
@@ -134,6 +161,7 @@ class Bucket(db.Model):
     )
 
     def serialize(self):
+        """Serializes all information tied to a bucket"""
 
         data = {
             "id" : self.id,
