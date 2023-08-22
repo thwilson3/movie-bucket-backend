@@ -139,21 +139,65 @@ def list_search_results():
     return jsonify(response.json())
 
 
-@app.route('/users/<int:user_id>/buckets')
+@app.route('/users/<int:user_id>/buckets', methods=['GET', 'POST'])
 def list_users_buckets(user_id):
     """Returns JSON list of all buckets associated with a user"""
 
     user = User.query.get(user_id)
 
-    if user.buckets:
+    if user is None:
+        return jsonify({"message": "user not found"}), 404
+
+    if request.method == 'GET':
+
         serialized_buckets = [bucket.serialize() for bucket in user.buckets]
 
         return jsonify(serialized_buckets)
 
+    if request.method == 'POST':
+        data = request.get_json()
+
+        bucket_name = data.get('bucket_name')
+        genre = data.get('genre')
+        description = data.get('description')
+        new_bucket = Bucket(
+            bucket_name=bucket_name,
+            genre=genre,
+            description=description)
+
+        db.session.add(new_bucket)
+        db.session.commit()
+
+        #TODO: reassess if this is the best response to give
+        return jsonify({"message": "bucket created successfully"})
+
+    #TODO: make this return something more meaningful
     return None
 
 
-@app.route('/users/<int:user_id>/buckets/<int:bucket_id>')
-def list_or_add_bucket(bucket_id):
+#TODO: verify this is working with both methods
+@app.route('/users/<int:user_id>/buckets/<int:bucket_id>', methods=['GET', 'DELETE'])
+def get_or_delete_bucket(user_id, bucket_id):
 
-    return
+    user = User.query.get(user_id)
+
+    if user is None:
+        return jsonify({"message": "user not found"}), 404
+
+    bucket = None
+    for b in user.buckets:
+        if b.id == bucket_id:
+            bucket = b
+            break
+
+    if bucket is None:
+        return jsonify({"message": "bucket not found"}), 404
+
+    if request.method == 'GET':
+        return jsonify(bucket.serialize())
+
+    elif request.method == 'DELETE':
+        db.session.delete(bucket)
+        db.session.commit()
+
+        return jsonify({"message": "bucket deleted successfully"}), 204
