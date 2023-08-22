@@ -141,16 +141,16 @@ def list_search_results():
 
 @app.route('/users/<int:user_id>/buckets')
 def list_users_buckets(user_id):
-
-    # data = request.get_json()
-    ###TODO: Research and implement marshmallow for SQLAlchemy to use for data serialization
+    """Returns JSON list of all buckets associated with a user"""
 
     user = User.query.get(user_id)
-    # buckets = [jsonify(bucket) for bucket in user.buckets]
-    buckets = user.buckets[0]
-    print("####################################", buckets)
 
-    return json.dumps(buckets)
+    if user.buckets:
+        serialized_buckets = [bucket.serialize() for bucket in user.buckets]
+
+        return jsonify(serialized_buckets)
+
+    return None
 
 
 @app.route('/users/<int:user_id>/buckets/<int:bucket_id>')

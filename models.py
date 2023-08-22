@@ -5,6 +5,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
+from flask import jsonify
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
@@ -124,23 +125,28 @@ class Bucket(db.Model):
 
     genre = db.Column(
         db.Text,
+        default=None,
     )
 
     description = db.Column(
         db.Text,
+        default=None,
     )
 
-    @classmethod
     def serialize(self):
 
         data = {
             "id" : self.id,
             "bucket_name" : self.bucket_name,
-            "genre" : self.genre,
-            "description" : self.description
         }
 
-        return json.dumps(data)
+        if self.genre is not None:
+            data['genre'] = self.genre
+
+        if self.description is not None:
+            data['description'] = self.description
+
+        return data
 
     #establish relationship between buckets and movies
     movies = db.relationship('Movie', secondary='buckets_movies', backref='buckets')
