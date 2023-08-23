@@ -1,18 +1,15 @@
 """SQLAlchemy models for Movie Bucket."""
 
-import json
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
-from flask import jsonify
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
-class Movie(db.Model):
 
-    __tablename__ = 'movies'
+class Movie(db.Model):
+    __tablename__ = "movies"
 
     id = db.Column(
         db.Integer,
@@ -53,22 +50,22 @@ class Movie(db.Model):
         """Serializes all information tied to a movie"""
 
         data = {
-            "id" : self.id,
-            "title" : self.title,
-            "is_watched" : self.is_watched,
+            "id": self.id,
+            "title": self.title,
+            "is_watched": self.is_watched,
         }
 
         if self.release_date is not None:
-            data['release_date'] = self.release_date
+            data["release_date"] = self.release_date
 
         if self.runtime is not None:
-            data['runtime'] = self.runtime
+            data["runtime"] = self.runtime
 
         if self.genre is not None:
-            data['genre'] = self.genre
+            data["genre"] = self.genre
 
         if self.bio is not None:
-            data['bio'] = self.bio
+            data["bio"] = self.bio
 
         return data
 
@@ -76,7 +73,7 @@ class Movie(db.Model):
 class User(db.Model, UserMixin):
     """User in the system."""
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = db.Column(
         db.Integer,
@@ -107,7 +104,7 @@ class User(db.Model, UserMixin):
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode("UTF-8")
 
         user = User(
             username=username,
@@ -118,10 +115,8 @@ class User(db.Model, UserMixin):
         db.session.add(user)
         return user
 
-
     @classmethod
     def authenticate(cls, username, password):
-
         user = cls.query.filter_by(username=username).first()
 
         if user:
@@ -131,14 +126,14 @@ class User(db.Model, UserMixin):
 
         return False
 
-    #establish relationship between user and buckets
-    buckets = db.relationship('Bucket', secondary='user_buckets', backref='users')
+    # establish relationship between user and buckets
+    buckets = db.relationship("Bucket", secondary="user_buckets", backref="users")
 
 
 class Bucket(db.Model):
     """Bucket to store movies"""
 
-    __tablename__ = 'buckets'
+    __tablename__ = "buckets"
 
     id = db.Column(
         db.Integer,
@@ -164,58 +159,61 @@ class Bucket(db.Model):
         """Serializes all information tied to a bucket"""
 
         data = {
-            "id" : self.id,
-            "bucket_name" : self.bucket_name,
+            "id": self.id,
+            "bucket_name": self.bucket_name,
         }
 
         if self.genre is not None:
-            data['genre'] = self.genre
+            data["genre"] = self.genre
 
         if self.description is not None:
-            data['description'] = self.description
+            data["description"] = self.description
 
         return data
 
-    #establish relationship between buckets and movies
-    movies = db.relationship('Movie', secondary='buckets_movies', backref='buckets')
+    # establish relationship between buckets and movies
+    movies = db.relationship("Movie", secondary="buckets_movies", backref="buckets")
+
 
 class User_Buckets(db.Model):
     """Join table between users and buckets."""
 
-    __tablename__ = 'user_buckets'
+    __tablename__ = "user_buckets"
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
 
     bucket_id = db.Column(
         db.Integer,
-        db.ForeignKey('buckets.id', ondelete='CASCADE'),
+        db.ForeignKey("buckets.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
+
 
 class Buckets_Movies(db.Model):
     """Join table between buckets and movies."""
 
-    __tablename__ = 'buckets_movies'
+    __tablename__ = "buckets_movies"
 
     bucket_id = db.Column(
         db.Integer,
-        db.ForeignKey('buckets.id', ondelete='CASCADE'),
+        db.ForeignKey("buckets.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
 
     movie_id = db.Column(
         db.Integer,
-        db.ForeignKey('movies.id', ondelete='CASCADE'),
+        db.ForeignKey("movies.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
+
 
 def connect_db(app):
     """Connect db to app"""
