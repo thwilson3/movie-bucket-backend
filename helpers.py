@@ -1,8 +1,4 @@
 from models import db, Bucket, User_Buckets
-from collections import namedtuple
-
-"""Defines shape of data for given bucket"""
-BucketData = namedtuple("BucketData", ["bucket_name", "genre", "description"])
 
 
 def create_bucket(bucket_name, genre, description):
@@ -10,9 +6,7 @@ def create_bucket(bucket_name, genre, description):
 
     try:
         new_bucket = Bucket(
-            bucket_name=bucket_name,
-            genre=genre,
-            description=description
+            bucket_name=bucket_name, genre=genre, description=description
         )
 
         db.session.add(new_bucket)
