@@ -21,6 +21,11 @@ class Movie(db.Model):
         nullable=False,
     )
 
+    image = db.Column(
+        db.Text,
+        default=None,
+    )
+
     release_date = db.Column(
         db.Text,
         default=None,
@@ -54,6 +59,9 @@ class Movie(db.Model):
             "title": self.title,
             "is_watched": self.is_watched,
         }
+
+        if self.image is not None:
+            data["image"] = self.image
 
         if self.release_date is not None:
             data["release_date"] = self.release_date
