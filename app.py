@@ -1,12 +1,11 @@
 import os
 import requests
-import json
 
 from dotenv import load_dotenv
 from flask_login import LoginManager, login_user
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
-from helpers import create_bucket, associate_user_with_bucket, BucketData
+from helpers import create_bucket, associate_user_with_bucket
 
 
 from flask import Flask, request, jsonify
