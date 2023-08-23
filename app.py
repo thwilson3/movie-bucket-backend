@@ -150,6 +150,7 @@ def list_all_or_add_buckets(user_id):
             jsonify(
                 {
                     "message": "bucket created successfully",
+                    "success": True,
                     "bucket": new_bucket.serialize(),
                 }
             ),
@@ -167,7 +168,9 @@ def get_or_delete_bucket(user_id, bucket_id):
     user = User.query.get(user_id)
 
     if user is None:
-        return jsonify({"message": "user not found"}), 404
+        return jsonify({
+            "message": "user not found",
+            "success": False}), 404
 
     bucket = None
     for b in user.buckets:
@@ -176,7 +179,9 @@ def get_or_delete_bucket(user_id, bucket_id):
             break
 
     if bucket is None:
-        return jsonify({"message": "bucket not found"}), 404
+        return jsonify({
+            "message": "bucket not found",
+            "success": False}), 404
 
     if request.method == "GET":
         return jsonify(bucket.serialize())
@@ -185,4 +190,6 @@ def get_or_delete_bucket(user_id, bucket_id):
         db.session.delete(bucket)
         db.session.commit()
 
-        return jsonify({"message": "bucket deleted successfully"}), 200
+        return jsonify({
+            "message": "bucket deleted successfully",
+            "success": True}), 200
