@@ -178,6 +178,9 @@ def list_all_or_add_buckets(user_id):
 def get_or_delete_bucket(user_id, bucket_id):
     """Get information in regards to single bucket or deletes that bucket"""
 
+    #TODO: Might not need to query entire User resource since bucket has a backref
+    # tied to users. May be able to just access bucket from bucket_id and then check
+    # to make sure bucket.user.user_id == user_id
     user = User.query.get(user_id)
 
     if user is None:
