@@ -121,8 +121,15 @@ def list_search_results():
     params = {"query": query}
 
     response = requests.get(url, params=params, headers=HEADERS)
+    data = response.json()
 
-    return jsonify(response.json())
+    desired_fields = ["title", "poster_path", "release_date", "overview"]
+
+    filtered_results = [
+        {field: result.get(field) for field in desired_fields} for result in data["results"]
+    ]
+
+    return jsonify(filtered_results)
 
 
 @app.route("/users/<int:user_id>/buckets", methods=["GET", "POST"])
@@ -224,7 +231,7 @@ def add_movie_to_bucket(user_id, bucket_id):
                 "message": "movie added successfully",
                 "success": True,
                 "bucket": bucket.serialize(),
-                "movie": new_movie.serialize()
+                "movie": new_movie.serialize(),
             }
         ),
         202,
