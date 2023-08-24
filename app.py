@@ -5,7 +5,13 @@ from dotenv import load_dotenv
 from flask_login import LoginManager, login_user
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
-from helpers import create_bucket, associate_user_with_bucket
+from helpers import (
+    create_bucket,
+    associate_user_with_bucket,
+    create_movie,
+    associate_movie_with_bucket,
+    get_bucket,
+)
 
 
 from flask import Flask, request, jsonify
@@ -168,20 +174,12 @@ def get_or_delete_bucket(user_id, bucket_id):
     user = User.query.get(user_id)
 
     if user is None:
-        return jsonify({
-            "message": "user not found",
-            "success": False}), 404
+        return jsonify({"message": "user not found", "success": False}), 404
 
-    bucket = None
-    for b in user.buckets:
-        if b.id == bucket_id:
-            bucket = b
-            break
+    bucket = get_bucket(user, bucket_id)
 
     if bucket is None:
-        return jsonify({
-            "message": "bucket not found",
-            "success": False}), 404
+        return jsonify({"message": "bucket not found", "success": False}), 404
 
     if request.method == "GET":
         return jsonify(bucket.serialize())
@@ -190,6 +188,43 @@ def get_or_delete_bucket(user_id, bucket_id):
         db.session.delete(bucket)
         db.session.commit()
 
-        return jsonify({
-            "message": "bucket deleted successfully",
-            "success": True}), 200
+        return jsonify({"message": "bucket deleted successfully", "success": True}), 200
+
+
+@app.route("/users/<int:user_id>/buckets/<int:bucket_id>/movies", methods=["POST"])
+def add_movie_to_bucket(user_id, bucket_id):
+    """Add movie to a specific bucket"""
+
+    user = User.query.get(user_id)
+
+    if user is None:
+        return jsonify({"message": "user not found", "success": False}), 404
+
+    bucket = get_bucket(user, bucket_id)
+
+    if bucket is None:
+        return jsonify({"message": "bucket not found", "success": False}), 404
+
+    data = request.get_json()
+
+    new_movie = create_movie(
+        title=data.get("title"),
+        image=data.get("image"),
+        release_date=data.get("release_date"),
+        runtime=data.get("runtime"),
+        genre=data.get("genre"),
+        bio=data.get("bio"),
+    )
+
+    associate_movie_with_bucket(bucket_id=bucket_id, movie_id=new_movie.id)
+
+    return (
+            jsonify(
+                {
+                    "message": "movie added successfully",
+                    "success": True,
+                    "bucket": bucket.serialize(),
+                }
+            ),
+            202,
+        )
