@@ -123,10 +123,10 @@ def list_search_results():
     response = requests.get(url, params=params, headers=HEADERS)
     data = response.json()
 
-    desired_fields = ["title", "poster_path", "release_date", "overview"]
+    target_fields = ["title", "poster_path", "release_date", "overview"]
 
     filtered_results = [
-        {field: result.get(field) for field in desired_fields} for result in data["results"]
+        {field: result.get(field) for field in target_fields} for result in data["results"]
     ]
 
     return jsonify(filtered_results)
