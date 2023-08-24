@@ -1,4 +1,4 @@
-from models import db, Bucket, User_Buckets
+from models import db, Bucket, User_Buckets, Movie, Buckets_Movies
 from sqlalchemy.exc import IntegrityError
 
 
@@ -30,3 +30,50 @@ def associate_user_with_bucket(user_id, bucket_id):
         raise Exception
 
     return True
+
+
+def create_movie(title, image, release_date, runtime, genre, bio):
+    """Create new Movie instance and add to database"""
+
+    try:
+        new_movie = Movie(
+            title=title,
+            image=image,
+            release_date=release_date,
+            runtime=runtime,
+            genre=genre,
+            bio=bio
+        )
+
+        db.session.add(new_movie)
+        db.session.commit()
+
+        return new_movie
+
+    except IntegrityError:
+        raise Exception
+
+
+def associate_movie_with_bucket(bucket_id, movie_id):
+    """Create association between movie and bucket"""
+
+    try:
+        bucket_movie = Buckets_Movies(bucket_id=bucket_id, movie_id=movie_id)
+        db.session.add(bucket_movie)
+        db.session.commit()
+    except IntegrityError:
+        raise Exception
+
+    return True
+
+
+def get_bucket(user, bucket_id):
+    """Find requested bucket tied to user"""
+
+    bucket = None
+    for b in user.buckets:
+        if b.id == bucket_id:
+            bucket = b
+            break
+
+    return bucket
