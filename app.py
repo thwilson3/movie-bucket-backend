@@ -219,12 +219,13 @@ def add_movie_to_bucket(user_id, bucket_id):
     associate_movie_with_bucket(bucket_id=bucket_id, movie_id=new_movie.id)
 
     return (
-            jsonify(
-                {
-                    "message": "movie added successfully",
-                    "success": True,
-                    "bucket": bucket.serialize(),
-                }
-            ),
-            202,
-        )
+        jsonify(
+            {
+                "message": "movie added successfully",
+                "success": True,
+                "bucket": bucket.serialize(),
+                "movie": new_movie.serialize()
+            }
+        ),
+        202,
+    )
