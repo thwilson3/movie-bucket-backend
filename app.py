@@ -178,15 +178,12 @@ def list_all_or_add_buckets(user_id):
 def get_or_delete_bucket(user_id, bucket_id):
     """Get information in regards to single bucket or deletes that bucket"""
 
-    #TODO: Might not need to query entire User resource since bucket has a backref
-    # tied to users. May be able to just access bucket from bucket_id and then check
-    # to make sure bucket.user.user_id == user_id
-    user = User.query.get(user_id)
+    bucket = Bucket.query.get(bucket_id)
 
-    if user is None:
-        return jsonify({"message": "user not found", "success": False}), 404
+    user_ids = [user.id for user in bucket.users]
 
-    bucket = get_bucket(user, bucket_id)
+    if user_id not in user_ids:
+        return jsonify({"message": "unauthorized access", "success": False}), 401
 
     if bucket is None:
         return jsonify({"message": "bucket not found", "success": False}), 404
@@ -205,12 +202,12 @@ def get_or_delete_bucket(user_id, bucket_id):
 def add_movie_to_bucket(user_id, bucket_id):
     """Add movie to a specific bucket"""
 
-    user = User.query.get(user_id)
+    bucket = Bucket.query.get(bucket_id)
 
-    if user is None:
-        return jsonify({"message": "user not found", "success": False}), 404
+    user_ids = [user.id for user in bucket.users]
 
-    bucket = get_bucket(user, bucket_id)
+    if user_id not in user_ids:
+        return jsonify({"message": "unauthorized access", "success": False}), 401
 
     if bucket is None:
         return jsonify({"message": "bucket not found", "success": False}), 404
