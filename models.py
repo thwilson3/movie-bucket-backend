@@ -134,6 +134,17 @@ class User(db.Model, UserMixin):
 
         return False
 
+    def serialize(self):
+        """Serializes all information tied to a user"""
+
+        data = {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+        }
+
+        return data
+
     # establish relationship between user and buckets
     buckets = db.relationship("Bucket", secondary="user_buckets", backref="users")
 
