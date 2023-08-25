@@ -65,15 +65,3 @@ def associate_movie_with_bucket(bucket_id, movie_id):
         raise Exception
 
     return True
-
-
-def get_bucket(user, bucket_id):
-    """Find requested bucket tied to user"""
-
-    bucket = None
-    for b in user.buckets:
-        if b.id == bucket_id:
-            bucket = b
-            break
-
-    return bucket
