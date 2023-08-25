@@ -10,13 +10,13 @@ from helpers import (
     associate_user_with_bucket,
     create_movie,
     associate_movie_with_bucket,
-    get_bucket,
+    create_response,
 )
 
 
 from flask import Flask, request, jsonify
 
-from models import db, connect_db, User, Movie, Bucket, User_Buckets
+from models import db, connect_db, User, Bucket
 
 load_dotenv()
 
@@ -41,7 +41,9 @@ HEADERS = {"accept": "application/json", "Authorization": f"Bearer {AUTH_KEY}"}
 
 BASE_API_URL = "https://api.themoviedb.org/3/"
 
+
 ########################################################
+###---------------------------------------SIGN-UP ROUTES
 
 
 @login_manager.user_loader
@@ -74,13 +76,13 @@ def signup():
         db.session.commit()
         login_user(user)
 
-        response = {"message": "Sign up successful", "success": True}
+        response = create_response("user signed up", True, "OK")
 
         return jsonify(response)
 
     # Failed login
     except IntegrityError:
-        response = {"message": "Sign up failed", "success": False}
+        response = create_response("sign up failed", False, "Bad Request")
 
         return jsonify(response)
 
@@ -100,15 +102,15 @@ def login():
     if user and user.authenticate(username=username, password=password):
         # Successful login
         login_user(user)
-        response = {"message": "Logged in successfully", "success": True}
+        response = create_response("logged in", True, "OK")
     else:
         # Failed login
-        response = {
-            "message": "Login failed. Please check your credentials.",
-            "success": False,
-        }
+        response = create_response("invalid credentials", False, "Unauthorized")
 
     return jsonify(response)
+
+########################################################
+###-------------------------------------API SEARCH ROUTE
 
 
 @app.route("/api/search")
@@ -126,10 +128,14 @@ def list_search_results():
     target_fields = ["title", "poster_path", "release_date", "overview"]
 
     filtered_results = [
-        {field: result.get(field) for field in target_fields} for result in data["results"]
+        {field: result.get(field) for field in target_fields}
+        for result in data["results"]
     ]
 
     return jsonify(filtered_results)
+
+########################################################
+###---------------------------------------BUCKET ROUTES
 
 
 @app.route("/users/<int:user_id>/buckets", methods=["GET", "POST"])
@@ -139,7 +145,7 @@ def list_all_or_add_buckets(user_id):
     user = User.query.get(user_id)
 
     if user is None:
-        return jsonify({"message": "user not found"}), 404
+        return jsonify(create_response("user not found", False, "Not Found"))
 
     # Serialize and return all buckets associated with user
     if request.method == "GET":
@@ -159,16 +165,10 @@ def list_all_or_add_buckets(user_id):
 
         associate_user_with_bucket(user_id, new_bucket.id)
 
-        return (
-            jsonify(
-                {
-                    "message": "bucket created successfully",
-                    "success": True,
-                    "bucket": new_bucket.serialize(),
-                }
-            ),
-            202,
-        )
+        response = create_response("bucket accepted", True, "Accepted")
+        response.update({"bucket": new_bucket.serialize()})
+
+        return jsonify(response)
 
     # TODO: make this return something more meaningful
     return jsonify({"message": "an error occured"})
@@ -183,10 +183,14 @@ def get_or_delete_bucket(user_id, bucket_id):
     user_ids = [user.id for user in bucket.users]
 
     if user_id not in user_ids:
-        return jsonify({"message": "unauthorized access", "success": False}), 401
+        return jsonify(
+            create_response(
+                "user not authorized for this bucket", False, "Unauthorized"
+            )
+        )
 
     if bucket is None:
-        return jsonify({"message": "bucket not found", "success": False}), 404
+        return jsonify(create_response("bucket not found", False, "Not Found"))
 
     if request.method == "GET":
         return jsonify(bucket.serialize())
@@ -195,7 +199,7 @@ def get_or_delete_bucket(user_id, bucket_id):
         db.session.delete(bucket)
         db.session.commit()
 
-        return jsonify({"message": "bucket deleted successfully", "success": True}), 200
+        return jsonify(create_response("bucket deleted", True, "OK"))
 
 
 @app.route("/users/<int:user_id>/buckets/<int:bucket_id>/movies", methods=["POST"])
@@ -207,10 +211,14 @@ def add_movie_to_bucket(user_id, bucket_id):
     user_ids = [user.id for user in bucket.users]
 
     if user_id not in user_ids:
-        return jsonify({"message": "unauthorized access", "success": False}), 401
+        return jsonify(
+            create_response(
+                "user not authorized for this bucket", False, "Unauthorized"
+            )
+        )
 
     if bucket is None:
-        return jsonify({"message": "bucket not found", "success": False}), 404
+        return jsonify(create_response("bucket not found", False, "Not Found"))
 
     data = request.get_json()
 
@@ -225,14 +233,12 @@ def add_movie_to_bucket(user_id, bucket_id):
 
     associate_movie_with_bucket(bucket_id=bucket_id, movie_id=new_movie.id)
 
-    return (
-        jsonify(
-            {
-                "message": "movie added successfully",
-                "success": True,
-                "bucket": bucket.serialize(),
-                "movie": new_movie.serialize(),
-            }
-        ),
-        202,
+    response = create_response("movie accepted", True, "Accepted")
+    response.update(
+        {
+            "bucket": bucket.serialize(),
+            "movie": new_movie.serialize(),
+        }
     )
+
+    return jsonify(response)
