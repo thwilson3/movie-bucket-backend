@@ -1,8 +1,9 @@
 from models import db, Bucket, User_Buckets, Movie, Buckets_Movies
 from sqlalchemy.exc import IntegrityError
+from typing import Dict
 
 
-def create_bucket(bucket_name, genre, description):
+def create_bucket(bucket_name: str, genre: str, description: str) -> Bucket:
     """Create new Bucket instance and add to database"""
 
     try:
@@ -19,7 +20,7 @@ def create_bucket(bucket_name, genre, description):
         raise Exception
 
 
-def associate_user_with_bucket(user_id, bucket_id):
+def associate_user_with_bucket(user_id: int, bucket_id: int) -> bool:
     """Create association between user and newly made bucket"""
 
     try:
@@ -32,7 +33,9 @@ def associate_user_with_bucket(user_id, bucket_id):
     return True
 
 
-def create_movie(title, image, release_date, runtime, genre, bio):
+def create_movie(
+    title: str, image: str, release_date: str, runtime: str, genre: str, bio: str
+) -> Movie:
     """Create new Movie instance and add to database"""
 
     try:
@@ -42,7 +45,7 @@ def create_movie(title, image, release_date, runtime, genre, bio):
             release_date=release_date,
             runtime=runtime,
             genre=genre,
-            bio=bio
+            bio=bio,
         )
 
         db.session.add(new_movie)
@@ -54,7 +57,7 @@ def create_movie(title, image, release_date, runtime, genre, bio):
         raise Exception
 
 
-def associate_movie_with_bucket(bucket_id, movie_id):
+def associate_movie_with_bucket(bucket_id: int, movie_id: int) -> bool:
     """Create association between movie and bucket"""
 
     try:
@@ -66,10 +69,6 @@ def associate_movie_with_bucket(bucket_id, movie_id):
 
     return True
 
-def create_response(message, success, status):
 
-    return {
-        "message": message,
-        "success": success,
-        "status": status
-        }
+def create_response(message: str, success: bool, status: str) -> Dict[str, str]:
+    return {"message": message, "success": success, "status": status}
