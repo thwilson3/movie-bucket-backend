@@ -65,3 +65,11 @@ def associate_movie_with_bucket(bucket_id, movie_id):
         raise Exception
 
     return True
+
+def create_response(message, success, status):
+
+    return {
+        "message": message,
+        "success": success,
+        "status": status
+        }
