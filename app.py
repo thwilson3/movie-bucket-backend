@@ -109,6 +109,7 @@ def login():
 
     return jsonify(response)
 
+
 ########################################################
 ###-------------------------------------API SEARCH ROUTE
 
@@ -133,6 +134,7 @@ def list_search_results():
     ]
 
     return jsonify(filtered_results)
+
 
 ########################################################
 ###---------------------------------------BUCKET ROUTES
@@ -165,13 +167,12 @@ def list_all_or_add_buckets(user_id):
 
         associate_user_with_bucket(user_id, new_bucket.id)
 
+        users = [user.serialize() for user in new_bucket.users]
+
         response = create_response("bucket accepted", True, "Accepted")
-        response.update({"bucket": new_bucket.serialize()})
+        response.update({"bucket": new_bucket.serialize(), "authorized_users": users})
 
         return jsonify(response)
-
-    # TODO: make this return something more meaningful
-    return jsonify({"message": "an error occured"})
 
 
 @app.route("/users/<int:user_id>/buckets/<int:bucket_id>", methods=["GET", "DELETE"])
