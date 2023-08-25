@@ -12,6 +12,7 @@ from helpers import (
     associate_movie_with_bucket,
     create_response,
 )
+from typing import Optional
 
 
 from flask import Flask, request, jsonify
@@ -47,7 +48,7 @@ BASE_API_URL = "https://api.themoviedb.org/3/"
 
 
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: int) -> Optional[User]:
     user = User.query.get(int(user_id))
     if user:
         return user
@@ -56,7 +57,7 @@ def load_user(user_id):
 
 
 @app.route("/signup", methods=["GET", "POST"])
-def signup():
+def signup() -> jsonify:
     """Signs up a user, returns JSON w/message and success status"""
 
     data = request.get_json()
@@ -88,7 +89,7 @@ def signup():
 
 
 @app.route("/login", methods=["POST"])
-def login():
+def login() -> jsonify:
     """Authenticates user and logs them in.
     Returns JSON w/message and success status"""
 
@@ -115,7 +116,7 @@ def login():
 
 
 @app.route("/api/search")
-def list_search_results():
+def list_search_results() -> jsonify:
     """Returns JSON list of search results"""
 
     query = request.args.get("query")
@@ -141,7 +142,7 @@ def list_search_results():
 
 
 @app.route("/users/<int:user_id>/buckets", methods=["GET", "POST"])
-def list_all_or_add_buckets(user_id):
+def list_all_or_add_buckets(user_id: int) -> jsonify:
     """Returns JSON list of all buckets associated with a user"""
 
     user = User.query.get(user_id)
@@ -176,7 +177,7 @@ def list_all_or_add_buckets(user_id):
 
 
 @app.route("/users/<int:user_id>/buckets/<int:bucket_id>", methods=["GET", "DELETE"])
-def get_or_delete_bucket(user_id, bucket_id):
+def get_or_delete_bucket(user_id: int, bucket_id: int) -> jsonify:
     """Get information in regards to single bucket or deletes that bucket"""
 
     bucket = Bucket.query.get(bucket_id)
@@ -204,7 +205,7 @@ def get_or_delete_bucket(user_id, bucket_id):
 
 
 @app.route("/users/<int:user_id>/buckets/<int:bucket_id>/movies", methods=["POST"])
-def add_movie_to_bucket(user_id, bucket_id):
+def add_movie_to_bucket(user_id: int, bucket_id: int) -> jsonify:
     """Add movie to a specific bucket"""
 
     bucket = Bucket.query.get(bucket_id)
