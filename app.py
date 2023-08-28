@@ -14,6 +14,7 @@ from helpers import (
     list_all_buckets,
     list_all_movies,
     create_response,
+    create_bucket_link,
 )
 from typing import Optional
 
@@ -205,6 +206,11 @@ def list_all_or_add_movie_to_bucket() -> jsonify:
     if bucket is None:
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
+    if not is_user_authorized(bucket, user_id):
+        return jsonify(
+            create_response("user not authorized", False, "Unauthorized")
+        )
+
     if request.method == "GET":
         if not is_user_authorized(bucket, user_id):
             return jsonify(
@@ -221,3 +227,28 @@ def list_all_or_add_movie_to_bucket() -> jsonify:
         data = request.get_json()
         response = add_movie_to_bucket(bucket, data)
         return jsonify(response)
+
+
+########################################################
+###------------------------------------------LINK ROUTES
+
+@app.get("/users/buckets/invite")
+def invite_user_to_collaborate():
+    """Generates invitation code for user to collaborate on a bucket"""
+
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
+
+    bucket = get_bucket(bucket_id)
+
+    if bucket is None:
+        return jsonify(create_response("bucket not found", False, "Not Found"))
+
+    if not is_user_authorized(bucket, user_id):
+        return jsonify(
+            create_response("user not authorized", False, "Unauthorized")
+        )
+
+    response = create_bucket_link(bucket_id)
+
+    return jsonify(response)
