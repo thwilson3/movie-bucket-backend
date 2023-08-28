@@ -8,15 +8,11 @@ from flask_migrate import Migrate
 from helpers import (
     get_bucket,
     add_bucket,
-    create_bucket,
     is_user_authorized,
-    associate_user_with_bucket,
     add_movie_to_bucket,
     delete_bucket,
     list_all_buckets,
-    create_movie,
     list_all_movies,
-    associate_movie_with_bucket,
     create_response,
 )
 from typing import Optional
