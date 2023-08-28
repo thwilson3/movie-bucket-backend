@@ -7,11 +7,13 @@ from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from helpers import (
     get_bucket,
+    add_bucket,
     create_bucket,
     is_user_authorized,
     associate_user_with_bucket,
     add_movie_to_bucket,
     delete_bucket,
+    list_all_buckets,
     create_movie,
     list_all_movies,
     associate_movie_with_bucket,
@@ -157,7 +159,7 @@ def list_all_or_add_buckets(user_id: int) -> jsonify:
 
     # Serialize and return all buckets associated with user
     if request.method == "GET":
-        serialized_buckets = [bucket.serialize() for bucket in user.buckets]
+        serialized_buckets = list_all_buckets(user)
 
         return jsonify(serialized_buckets)
 
@@ -165,18 +167,7 @@ def list_all_or_add_buckets(user_id: int) -> jsonify:
     if request.method == "POST":
         data = request.get_json()
 
-        new_bucket = create_bucket(
-            bucket_name=data.get("bucket_name"),
-            genre=data.get("genre"),
-            description=data.get("description"),
-        )
-
-        associate_user_with_bucket(user_id, new_bucket.id)
-
-        users = [user.serialize() for user in new_bucket.users]
-
-        response = create_response("bucket accepted", True, "Accepted")
-        response.update({"bucket": new_bucket.serialize(), "authorized_users": users})
+        response = add_bucket(user, data)
 
         return jsonify(response)
 
@@ -195,9 +186,9 @@ def get_or_delete_bucket() -> jsonify:
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
     if not is_user_authorized(bucket, user_id):
-            return jsonify(
-                create_response("user not authorized", False, "Unauthorized")
-            )
+        return jsonify(
+            create_response("user not authorized", False, "Unauthorized")
+        )
 
     if request.method == "GET":
         return jsonify(bucket.serialize())
