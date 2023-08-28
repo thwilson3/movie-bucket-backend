@@ -1,6 +1,6 @@
 from models import db, Bucket, User_Buckets, Movie, Buckets_Movies
 from sqlalchemy.exc import IntegrityError
-from typing import Dict
+from typing import Dict, List
 
 
 def create_bucket(bucket_name: str, genre: str, description: str) -> Bucket:
@@ -16,6 +16,7 @@ def create_bucket(bucket_name: str, genre: str, description: str) -> Bucket:
 
         return new_bucket
 
+        ##TODO: make these error messages more meaningful, example: ex.message/str(ex)
     except IntegrityError:
         raise Exception
 
@@ -71,4 +72,60 @@ def associate_movie_with_bucket(bucket_id: int, movie_id: int) -> bool:
 
 
 def create_response(message: str, success: bool, status: str) -> Dict[str, str]:
+    """Build a response for requests"""
+
     return {"message": message, "success": success, "status": status}
+
+
+def is_user_authorized(bucket: Bucket, user_id: int) -> bool:
+    """Verifies if user has authorization for a bucket"""
+
+    user_ids = [user.id for user in bucket.users]
+    return user_id in user_ids
+
+
+def get_bucket(bucket_id: int):
+    """Find bucket and return the instance"""
+
+    return Bucket.query.get(bucket_id)
+
+
+def list_all_movies(bucket: Bucket) -> List[Dict]:
+    """Serializes all movies tied to a bucket"""
+
+    serialized_movies = [movie.serialize() for movie in bucket.movies]
+    return serialized_movies
+
+
+def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
+    """Add/associate movie to the bucket and create a response"""
+
+    new_movie = create_movie(
+        title=data.get("title"),
+        image=data.get("image"),
+        release_date=data.get("release_date"),
+        runtime=data.get("runtime"),
+        genre=data.get("genre"),
+        bio=data.get("bio"),
+    )
+
+    associate_movie_with_bucket(bucket_id=bucket.id, movie_id=new_movie.id)
+
+    response = create_response("movie accepted", True, "Accepted")
+    response.update(
+        {
+            "bucket": bucket.serialize(),
+            "movie": new_movie.serialize(),
+        }
+    )
+    return response
+
+def delete_bucket(bucket: Bucket) -> Dict:
+    """Delete a bucket and build a response"""
+
+    db.session.delete(bucket)
+    db.session.commit()
+
+    response = create_response("bucket deleted", True, "OK")
+
+    return response
