@@ -125,6 +125,8 @@ class User(db.Model, UserMixin):
 
     @classmethod
     def authenticate(cls, username, password):
+        """Authenticates user."""
+
         user = cls.query.filter_by(username=username).first()
 
         if user:
