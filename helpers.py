@@ -172,6 +172,11 @@ def generate_invite_code(length: int) -> str:
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
+    existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
+
+    for link in existing_links:
+        db.session.delete(link)
+
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
 
@@ -182,10 +187,38 @@ def create_bucket_link(bucket_id: int) -> Dict:
     db.session.add(new_link)
     db.session.commit()
 
-    response = create_response("invite code accepted", True, "Accepted")
+    response = create_response("invite code created", True, "Accepted")
     response.update(
         {
             "bucket_link": new_link.serialize(),
         }
     )
     return response
+
+
+def verify_and_link_users(data):
+    """Verify code matches, associate new user with bucket, clean up link"""
+
+    user_id = data.get("user_id")
+    bucket_id = data.get("bucket_id")
+    invite_code = data.get("invite_code")
+
+    link = BucketLink.query.filter_by(bucket_id=bucket_id).first()
+
+    if link and link.expiration_date > datetime.now():
+        if invite_code == link.invite_code:
+            associate_user_with_bucket(user_id=user_id, bucket_id=bucket_id)
+
+            db.session.delete(link)
+            db.session.commit()
+
+            bucket = get_bucket(bucket_id=bucket_id)
+
+            users = [user.serialize() for user in bucket.users]
+
+            response = create_response("user added to bucket", True, "OK")
+            response.update({"bucket": bucket.serialize(), "authorized_users": users})
+
+            return response
+
+    return False
