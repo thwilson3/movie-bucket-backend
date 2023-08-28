@@ -6,9 +6,14 @@ from flask_login import LoginManager, login_user
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from helpers import (
+    get_bucket,
     create_bucket,
+    is_user_authorized,
     associate_user_with_bucket,
+    add_movie_to_bucket,
+    delete_bucket,
     create_movie,
+    list_all_movies,
     associate_movie_with_bucket,
     create_response,
 )
@@ -176,71 +181,56 @@ def list_all_or_add_buckets(user_id: int) -> jsonify:
         return jsonify(response)
 
 
-@app.route("/users/<int:user_id>/buckets/<int:bucket_id>", methods=["GET", "DELETE"])
-def get_or_delete_bucket(user_id: int, bucket_id: int) -> jsonify:
+# TODO: consider separating routes into dedicated routes by method
+@app.route("/users/buckets", methods=["GET", "DELETE"])
+def get_or_delete_bucket() -> jsonify:
     """Get information in regards to single bucket or deletes that bucket"""
 
-    bucket = Bucket.query.get(bucket_id)
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
 
-    user_ids = [user.id for user in bucket.users]
-
-    if user_id not in user_ids:
-        return jsonify(
-            create_response(
-                "user not authorized for this bucket", False, "Unauthorized"
-            )
-        )
+    bucket = get_bucket(bucket_id)
 
     if bucket is None:
         return jsonify(create_response("bucket not found", False, "Not Found"))
+
+    if not is_user_authorized(bucket, user_id):
+            return jsonify(
+                create_response("user not authorized", False, "Unauthorized")
+            )
 
     if request.method == "GET":
         return jsonify(bucket.serialize())
 
     elif request.method == "DELETE":
-        db.session.delete(bucket)
-        db.session.commit()
+        response = delete_bucket(bucket)
 
-        return jsonify(create_response("bucket deleted", True, "OK"))
+        return jsonify(response)
 
 
-@app.route("/users/<int:user_id>/buckets/<int:bucket_id>/movies", methods=["POST"])
-def add_movie_to_bucket(user_id: int, bucket_id: int) -> jsonify:
-    """Add movie to a specific bucket"""
+@app.route("/users/buckets/movies", methods=["GET", "POST"])
+def list_all_or_add_movie_to_bucket() -> jsonify:
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
 
-    bucket = Bucket.query.get(bucket_id)
-
-    user_ids = [user.id for user in bucket.users]
-
-    if user_id not in user_ids:
-        return jsonify(
-            create_response(
-                "user not authorized for this bucket", False, "Unauthorized"
-            )
-        )
+    bucket = get_bucket(bucket_id)
 
     if bucket is None:
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
-    data = request.get_json()
+    if request.method == "GET":
+        if not is_user_authorized(bucket, user_id):
+            return jsonify(
+                create_response("user not authorized", False, "Unauthorized")
+            )
+        serialized_movies = list_all_movies(bucket)
+        return jsonify(serialized_movies)
 
-    new_movie = create_movie(
-        title=data.get("title"),
-        image=data.get("image"),
-        release_date=data.get("release_date"),
-        runtime=data.get("runtime"),
-        genre=data.get("genre"),
-        bio=data.get("bio"),
-    )
-
-    associate_movie_with_bucket(bucket_id=bucket_id, movie_id=new_movie.id)
-
-    response = create_response("movie accepted", True, "Accepted")
-    response.update(
-        {
-            "bucket": bucket.serialize(),
-            "movie": new_movie.serialize(),
-        }
-    )
-
-    return jsonify(response)
+    if request.method == "POST":
+        if not is_user_authorized(bucket, user_id):
+            return jsonify(
+                create_response("user not authorized", False, "Unauthorized")
+            )
+        data = request.get_json()
+        response = add_movie_to_bucket(bucket, data)
+        return jsonify(response)
