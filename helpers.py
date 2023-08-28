@@ -1,6 +1,10 @@
-from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User
+import string
+import random
+
+from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User, BucketLink
 from sqlalchemy.exc import IntegrityError
 from typing import Dict, List
+from datetime import datetime, timedelta
 
 
 def create_bucket(bucket_name: str, genre: str, description: str) -> Bucket:
@@ -155,4 +159,33 @@ def delete_bucket(bucket: Bucket) -> Dict:
 
     response = create_response("bucket deleted", True, "OK")
 
+    return response
+
+
+def generate_invite_code(length: int) -> str:
+    """Generate a code with only uppercase and digits based on given length"""
+
+    characters = string.ascii_uppercase + string.digits
+    return "".join(random.choice(characters) for _ in range(length))
+
+
+def create_bucket_link(bucket_id: int) -> Dict:
+    """Creates instance of BucketLink and stores in db"""
+
+    invite_code = generate_invite_code(5)
+    expiration_date = datetime.now() + timedelta(minutes=5)
+
+    new_link = BucketLink(
+        bucket_id=bucket_id, invite_code=invite_code, expiration_date=expiration_date
+    )
+
+    db.session.add(new_link)
+    db.session.commit()
+
+    response = create_response("invite code accepted", True, "Accepted")
+    response.update(
+        {
+            "bucket_link": new_link.serialize(),
+        }
+    )
     return response
