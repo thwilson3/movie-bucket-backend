@@ -1,4 +1,4 @@
-from models import db, Bucket, User_Buckets, Movie, Buckets_Movies
+from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User
 from sqlalchemy.exc import IntegrityError
 from typing import Dict, List
 
@@ -97,6 +97,32 @@ def list_all_movies(bucket: Bucket) -> List[Dict]:
     return serialized_movies
 
 
+def list_all_buckets(user: User) -> List[Dict]:
+    """Serializes all buckets tied to a user"""
+
+    serialized_buckets = [bucket.serialize() for bucket in user.buckets]
+    return serialized_buckets
+
+
+def add_bucket(user, data):
+    """Add/associate bucket to the user and create a response"""
+
+    new_bucket = create_bucket(
+        bucket_name=data.get("bucket_name"),
+        genre=data.get("genre"),
+        description=data.get("description"),
+    )
+
+    associate_user_with_bucket(user_id=user.id, bucket_id=new_bucket.id)
+
+    users = [user.serialize() for user in new_bucket.users]
+
+    response = create_response("bucket accepted", True, "Accepted")
+    response.update({"bucket": new_bucket.serialize(), "authorized_users": users})
+
+    return response
+
+
 def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
     """Add/associate movie to the bucket and create a response"""
 
@@ -119,6 +145,7 @@ def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
         }
     )
     return response
+
 
 def delete_bucket(bucket: Bucket) -> Dict:
     """Delete a bucket and build a response"""
