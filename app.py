@@ -15,13 +15,14 @@ from helpers import (
     list_all_movies,
     create_response,
     create_bucket_link,
+    verify_and_link_users,
 )
 from typing import Optional
 
 
 from flask import Flask, request, jsonify
 
-from models import db, connect_db, User, Bucket
+from models import db, connect_db, User
 
 load_dotenv()
 
@@ -183,12 +184,13 @@ def get_or_delete_bucket() -> jsonify:
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(
-            create_response("user not authorized", False, "Unauthorized")
-        )
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
     if request.method == "GET":
-        return jsonify(bucket.serialize())
+        users = [user.serialize() for user in bucket.users]
+        response = {"bucket": bucket.serialize(), "authorized_users": users}
+
+        return jsonify(response)
 
     elif request.method == "DELETE":
         response = delete_bucket(bucket)
@@ -207,9 +209,7 @@ def list_all_or_add_movie_to_bucket() -> jsonify:
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(
-            create_response("user not authorized", False, "Unauthorized")
-        )
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
     if request.method == "GET":
         if not is_user_authorized(bucket, user_id):
@@ -232,6 +232,7 @@ def list_all_or_add_movie_to_bucket() -> jsonify:
 ########################################################
 ###------------------------------------------LINK ROUTES
 
+
 @app.get("/users/buckets/invite")
 def invite_user_to_collaborate():
     """Generates invitation code for user to collaborate on a bucket"""
@@ -245,10 +246,20 @@ def invite_user_to_collaborate():
         return jsonify(create_response("bucket not found", False, "Not Found"))
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(
-            create_response("user not authorized", False, "Unauthorized")
-        )
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
     response = create_bucket_link(bucket_id)
+
+    return jsonify(response)
+
+
+@app.post("/users/buckets/link")
+def link_additional_users_to_bucket():
+    data = request.get_json()
+
+    response = verify_and_link_users(data)
+
+    if not response:
+        return jsonify(create_response("invalid credentials", False, "Unauthorized"))
 
     return jsonify(response)
