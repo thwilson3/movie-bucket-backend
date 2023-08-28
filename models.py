@@ -196,6 +196,44 @@ class Bucket(db.Model):
     movies = db.relationship("Movie", secondary="buckets_movies", backref="buckets")
 
 
+class BucketLink(db.Model):
+    """Temporarily holds invite info for account link"""
+
+    __tablename__ = 'bucket_links'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    bucket_id = db.Column(
+        db.Integer,
+        db.ForeignKey('buckets.id')
+    )
+
+    invite_code = db.Column(
+        db.String,
+        nullable=False
+    )
+
+    expiration_date = db.Column(
+        db.DateTime,
+        nullable=False,
+    )
+
+    def serialize(self):
+        """Serializes all information tied to a bucket_link"""
+
+        data = {
+            "id": self.id,
+            "bucket_id": self.bucket_id,
+            "invite_code": self.invite_code,
+            "expiration_date": self.expiration_date
+        }
+
+        return data
+
+
 class User_Buckets(db.Model):
     """Join table between users and buckets."""
 
@@ -234,6 +272,7 @@ class Buckets_Movies(db.Model):
         nullable=False,
         primary_key=True,
     )
+
 
 
 def connect_db(app):
