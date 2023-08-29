@@ -60,8 +60,10 @@ def create_movie(
 
         return new_movie
 
-    except IntegrityError:
-        raise Exception
+    except IntegrityError as err:
+        error_message = err.orig.diag.message_detail
+
+        raise Exception(error_message)
 
 
 def associate_movie_with_bucket(bucket_id: int, movie_id: int) -> bool:
@@ -71,8 +73,10 @@ def associate_movie_with_bucket(bucket_id: int, movie_id: int) -> bool:
         bucket_movie = Buckets_Movies(bucket_id=bucket_id, movie_id=movie_id)
         db.session.add(bucket_movie)
         db.session.commit()
-    except IntegrityError:
-        raise Exception
+    except IntegrityError as err:
+        error_message = err.orig.diag.message_detail
+
+        raise Exception(error_message)
 
     return True
 
