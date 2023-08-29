@@ -16,6 +16,7 @@ from helpers import (
     create_response,
     create_bucket_link,
     verify_and_link_users,
+    performance_timer
 )
 from typing import Optional
 
@@ -146,8 +147,8 @@ def list_search_results() -> jsonify:
 ###---------------------------------------BUCKET ROUTES
 
 
-@app.route("/users/<int:user_id>/buckets", methods=["GET", "POST"])
-def list_all_or_add_buckets(user_id: int) -> jsonify:
+@app.get("/users/<int:user_id>/buckets")
+def list_all_user_buckets(user_id: int) -> jsonify:
     """Returns JSON list of all buckets associated with a user"""
 
     user = User.query.get(user_id)
@@ -155,25 +156,30 @@ def list_all_or_add_buckets(user_id: int) -> jsonify:
     if user is None:
         return jsonify(create_response("user not found", False, "Not Found"))
 
-    # Serialize and return all buckets associated with user
-    if request.method == "GET":
-        serialized_buckets = list_all_buckets(user)
+    serialized_buckets = list_all_buckets(user)
 
-        return jsonify(serialized_buckets)
-
-    # Create new bucket and associate it with user
-    if request.method == "POST":
-        data = request.get_json()
-
-        response = add_bucket(user, data)
-
-        return jsonify(response)
+    return jsonify(serialized_buckets)
 
 
-# TODO: consider separating routes into dedicated routes by method
-@app.route("/users/buckets", methods=["GET", "DELETE"])
-def get_or_delete_bucket() -> jsonify:
-    """Get information in regards to single bucket or deletes that bucket"""
+@app.post("/users/<int:user_id>/buckets")
+def add_new_bucket(user_id: int) -> jsonify:
+    """Adds a new bucket and returns JSON"""
+
+    user = User.query.get(user_id)
+
+    if user is None:
+        return jsonify(create_response("user not found", False, "Not Found"))
+
+    data = request.get_json()
+
+    response = add_bucket(user, data)
+
+    return jsonify(response)
+
+
+@app.get("/users/buckets")
+def get_bucket_info() -> jsonify:
+    """Get information in regards to single bucket"""
 
     user_id = request.args.get("user_id", type=int)
     bucket_id = request.args.get("bucket_id", type=int)
@@ -186,20 +192,16 @@ def get_or_delete_bucket() -> jsonify:
     if not is_user_authorized(bucket, user_id):
         return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
-    if request.method == "GET":
-        users = [user.serialize() for user in bucket.users]
-        response = {"bucket": bucket.serialize(), "authorized_users": users}
+    users = [user.serialize() for user in bucket.users]
+    response = {"bucket": bucket.serialize(), "authorized_users": users}
 
-        return jsonify(response)
-
-    elif request.method == "DELETE":
-        response = delete_bucket(bucket)
-
-        return jsonify(response)
+    return jsonify(response)
 
 
-@app.route("/users/buckets/movies", methods=["GET", "POST"])
-def list_all_or_add_movie_to_bucket() -> jsonify:
+@app.delete("/users/buckets")
+def delete_single_bucket() -> jsonify:
+    """Deletes specific bucket"""
+
     user_id = request.args.get("user_id", type=int)
     bucket_id = request.args.get("bucket_id", type=int)
 
@@ -211,22 +213,48 @@ def list_all_or_add_movie_to_bucket() -> jsonify:
     if not is_user_authorized(bucket, user_id):
         return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
-    if request.method == "GET":
-        if not is_user_authorized(bucket, user_id):
-            return jsonify(
-                create_response("user not authorized", False, "Unauthorized")
-            )
-        serialized_movies = list_all_movies(bucket)
-        return jsonify(serialized_movies)
+    response = delete_bucket(bucket)
 
-    if request.method == "POST":
-        if not is_user_authorized(bucket, user_id):
-            return jsonify(
-                create_response("user not authorized", False, "Unauthorized")
-            )
-        data = request.get_json()
-        response = add_movie_to_bucket(bucket, data)
-        return jsonify(response)
+    return jsonify(response)
+
+
+@app.get("/users/buckets/movies")
+def list_all_movies_in_bucket() -> jsonify:
+    """Lists all movies that exist inside of a bucket"""
+
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
+
+    bucket = get_bucket(bucket_id)
+
+    if bucket is None:
+        return jsonify(create_response("bucket not found", False, "Not Found"))
+
+    if not is_user_authorized(bucket, user_id):
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+
+    serialized_movies = list_all_movies(bucket)
+    return jsonify(serialized_movies)
+
+
+@app.post("/users/buckets/movies")
+def add_new_movie_to_bucket() -> jsonify:
+    """Add a new movie to a bucket"""
+
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
+
+    bucket = get_bucket(bucket_id)
+
+    if bucket is None:
+        return jsonify(create_response("bucket not found", False, "Not Found"))
+
+    if not is_user_authorized(bucket, user_id):
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+
+    data = request.get_json()
+    response = add_movie_to_bucket(bucket, data)
+    return jsonify(response)
 
 
 ########################################################
