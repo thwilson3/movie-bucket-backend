@@ -2,7 +2,7 @@ import os
 import requests
 
 from dotenv import load_dotenv
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, logout_user, login_required
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
 from helpers import (
@@ -70,7 +70,7 @@ def signup() -> jsonify:
     email = data.get("email")
     password = data.get("password")
 
-    # Successful login
+    # Successful signup
     try:
         user = User.signup(
             username=username,
@@ -85,9 +85,10 @@ def signup() -> jsonify:
 
         return jsonify(response)
 
-    # Failed login
-    except IntegrityError:
-        response = create_response("sign up failed", False, "Bad Request")
+    # Failed signup
+    except IntegrityError as err:
+        error_message = err.orig.diag.message_detail
+        response = create_response(f"{error_message}", False, "Bad Request")
 
         return jsonify(response)
 
@@ -113,6 +114,15 @@ def login() -> jsonify:
         response = create_response("invalid credentials", False, "Unauthorized")
 
     return jsonify(response)
+
+@app.post("/logout")
+@login_required
+def logout() -> jsonify:
+    """Clears session and logs user out"""
+
+    logout_user()
+
+    return jsonify(create_response("logout successful", True, "OK"))
 
 
 ########################################################
@@ -146,6 +156,7 @@ def list_search_results() -> jsonify:
 
 
 @app.get("/users/<int:user_id>/buckets")
+@login_required
 @performance_timer
 def list_all_user_buckets(user_id: int) -> jsonify:
     """Returns JSON list of all buckets associated with a user"""
@@ -161,6 +172,7 @@ def list_all_user_buckets(user_id: int) -> jsonify:
 
 
 @app.post("/users/<int:user_id>/buckets")
+@login_required
 @performance_timer
 def add_new_bucket(user_id: int) -> jsonify:
     """Adds a new bucket and returns JSON"""
@@ -178,6 +190,7 @@ def add_new_bucket(user_id: int) -> jsonify:
 
 
 @app.get("/users/buckets")
+@login_required
 @performance_timer
 def get_bucket_info() -> jsonify:
     """Get information in regards to single bucket"""
@@ -200,6 +213,7 @@ def get_bucket_info() -> jsonify:
 
 
 @app.delete("/users/buckets")
+@login_required
 @performance_timer
 def delete_single_bucket() -> jsonify:
     """Deletes specific bucket"""
@@ -221,6 +235,7 @@ def delete_single_bucket() -> jsonify:
 
 
 @app.get("/users/buckets/movies")
+@login_required
 @performance_timer
 def list_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
@@ -241,6 +256,7 @@ def list_all_movies_in_bucket() -> jsonify:
 
 
 @app.post("/users/buckets/movies")
+@login_required
 @performance_timer
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
@@ -266,6 +282,7 @@ def add_new_movie_to_bucket() -> jsonify:
 
 
 @app.get("/users/buckets/invite")
+@login_required
 @performance_timer
 def invite_user_to_collaborate():
     """Generates invitation code for user to collaborate on a bucket"""
@@ -287,6 +304,7 @@ def invite_user_to_collaborate():
 
 
 @app.post("/users/buckets/link")
+@login_required
 @performance_timer
 def link_additional_users_to_bucket():
     data = request.get_json()
