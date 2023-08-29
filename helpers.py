@@ -1,5 +1,7 @@
 import string
 import random
+import time
+import functools
 
 from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User, BucketLink
 from sqlalchemy.exc import IntegrityError
@@ -222,3 +224,17 @@ def verify_and_link_users(data):
             return response
 
     return False
+
+
+def performance_timer(func):
+    """Decorator to help time function execution"""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"{func.__name__} took {execution_time:.4f} seconds")
+        return result
+    return wrapper

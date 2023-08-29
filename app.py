@@ -16,13 +16,11 @@ from helpers import (
     create_response,
     create_bucket_link,
     verify_and_link_users,
-    performance_timer
+    performance_timer,
 )
+
 from typing import Optional
-
-
 from flask import Flask, request, jsonify
-
 from models import db, connect_db, User
 
 load_dotenv()
@@ -94,7 +92,7 @@ def signup() -> jsonify:
         return jsonify(response)
 
 
-@app.route("/login", methods=["POST"])
+@app.post("/login")
 def login() -> jsonify:
     """Authenticates user and logs them in.
     Returns JSON w/message and success status"""
@@ -148,6 +146,7 @@ def list_search_results() -> jsonify:
 
 
 @app.get("/users/<int:user_id>/buckets")
+@performance_timer
 def list_all_user_buckets(user_id: int) -> jsonify:
     """Returns JSON list of all buckets associated with a user"""
 
@@ -162,6 +161,7 @@ def list_all_user_buckets(user_id: int) -> jsonify:
 
 
 @app.post("/users/<int:user_id>/buckets")
+@performance_timer
 def add_new_bucket(user_id: int) -> jsonify:
     """Adds a new bucket and returns JSON"""
 
@@ -178,6 +178,7 @@ def add_new_bucket(user_id: int) -> jsonify:
 
 
 @app.get("/users/buckets")
+@performance_timer
 def get_bucket_info() -> jsonify:
     """Get information in regards to single bucket"""
 
@@ -199,6 +200,7 @@ def get_bucket_info() -> jsonify:
 
 
 @app.delete("/users/buckets")
+@performance_timer
 def delete_single_bucket() -> jsonify:
     """Deletes specific bucket"""
 
@@ -219,6 +221,7 @@ def delete_single_bucket() -> jsonify:
 
 
 @app.get("/users/buckets/movies")
+@performance_timer
 def list_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
 
@@ -238,6 +241,7 @@ def list_all_movies_in_bucket() -> jsonify:
 
 
 @app.post("/users/buckets/movies")
+@performance_timer
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
 
@@ -262,6 +266,7 @@ def add_new_movie_to_bucket() -> jsonify:
 
 
 @app.get("/users/buckets/invite")
+@performance_timer
 def invite_user_to_collaborate():
     """Generates invitation code for user to collaborate on a bucket"""
 
@@ -282,6 +287,7 @@ def invite_user_to_collaborate():
 
 
 @app.post("/users/buckets/link")
+@performance_timer
 def link_additional_users_to_bucket():
     data = request.get_json()
 
