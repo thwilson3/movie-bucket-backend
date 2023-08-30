@@ -119,11 +119,7 @@ def toggle_movie_watch_status(movie: Movie):
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
-    existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
-
-    for link in existing_links:
-        db.session.delete(link)
-
+    clean_up_links(bucket_id)
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
 
@@ -179,7 +175,7 @@ def verify_and_link_users(data):
 
             bucket = get_bucket(bucket_id=bucket_id)
 
-            users = [user.serialize() for user in bucket.users]
+            users = get_auth_users(bucket)
 
             response = create_response("user added to bucket", True, "OK")
             response.update({"bucket": bucket.serialize(), "authorized_users": users})
@@ -208,6 +204,23 @@ def delete_bucket(bucket: Bucket) -> Dict:
     return response
 
 
+def clean_up_links(bucket_id: int) -> bool:
+    existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
+
+    for link in existing_links:
+        try:
+            db.session.delete(link)
+
+        except IntegrityError as err:
+            db.session.rollback()
+
+            error_message = err.orig.diag.message_detail
+
+            raise err(error_message)
+
+    return True
+
+
 ########################################################
 ###-----------------------------------MULTI-STEP HELPERS
 
@@ -223,7 +236,7 @@ def add_bucket(user, data):
 
     associate_user_with_bucket(user_id=user.id, bucket_id=new_bucket.id)
 
-    users = [user.serialize() for user in new_bucket.users]
+    users = get_auth_users(new_bucket)
 
     response = create_response("bucket accepted", True, "Accepted")
     response.update({"bucket": new_bucket.serialize(), "authorized_users": users})
@@ -278,6 +291,31 @@ def get_movie(movie_id: int):
 
 
 ########################################################
+###--------------------------------SERIALIZATION HELPERS
+
+
+def get_all_movies(bucket: Bucket) -> List[Dict]:
+    """Serializes all movies tied to a bucket"""
+
+    serialized_movies = [movie.serialize() for movie in bucket.movies]
+    return serialized_movies
+
+
+def get_all_buckets(user: User) -> List[Dict]:
+    """Serializes all buckets tied to a user"""
+
+    serialized_buckets = [bucket.serialize() for bucket in user.buckets]
+    return serialized_buckets
+
+
+def get_auth_users(bucket: Bucket) -> List[Dict]:
+    """Serializes all auth users tied to a bucket"""
+
+    users = [user.serialize() for user in bucket.users]
+    return users
+
+
+########################################################
 ###----------------------------------------MISC HELPERS
 
 
@@ -292,20 +330,6 @@ def is_user_authorized(bucket: Bucket, user_id: int) -> bool:
 
     user_ids = [user.id for user in bucket.users]
     return user_id in user_ids
-
-
-def list_all_movies(bucket: Bucket) -> List[Dict]:
-    """Serializes all movies tied to a bucket"""
-
-    serialized_movies = [movie.serialize() for movie in bucket.movies]
-    return serialized_movies
-
-
-def list_all_buckets(user: User) -> List[Dict]:
-    """Serializes all buckets tied to a user"""
-
-    serialized_buckets = [bucket.serialize() for bucket in user.buckets]
-    return serialized_buckets
 
 
 def generate_invite_code(length: int) -> str:
