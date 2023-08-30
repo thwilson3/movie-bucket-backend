@@ -8,13 +8,14 @@ from flask_migrate import Migrate
 from helpers import (
     get_bucket,
     add_bucket,
+    get_user,
     is_user_authorized,
     add_movie_to_bucket,
     delete_bucket,
-    list_all_buckets,
+    get_all_buckets,
     get_movie,
     toggle_movie_watch_status,
-    list_all_movies,
+    get_all_movies,
     create_response,
     create_bucket_link,
     verify_and_link_users,
@@ -160,15 +161,15 @@ def list_search_results() -> jsonify:
 @app.get("/users/<int:user_id>/buckets")
 @login_required
 @performance_timer
-def list_all_user_buckets(user_id: int) -> jsonify:
+def get_all_user_buckets(user_id: int) -> jsonify:
     """Returns JSON list of all buckets associated with a user"""
 
-    user = User.query.get(user_id)
+    user = get_user(user_id=user_id)
 
     if user is None:
         return jsonify(create_response("user not found", False, "Not Found"))
 
-    serialized_buckets = list_all_buckets(user)
+    serialized_buckets = get_all_buckets(user)
 
     return jsonify(serialized_buckets)
 
@@ -179,7 +180,7 @@ def list_all_user_buckets(user_id: int) -> jsonify:
 def add_new_bucket(user_id: int) -> jsonify:
     """Adds a new bucket and returns JSON"""
 
-    user = User.query.get(user_id)
+    user = get_user(user_id=user_id)
 
     if user is None:
         return jsonify(create_response("user not found", False, "Not Found"))
@@ -239,7 +240,7 @@ def delete_single_bucket() -> jsonify:
 @app.get("/users/buckets/movies")
 @login_required
 @performance_timer
-def list_all_movies_in_bucket() -> jsonify:
+def get_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
 
     user_id = request.args.get("user_id", type=int)
@@ -253,7 +254,7 @@ def list_all_movies_in_bucket() -> jsonify:
     if not is_user_authorized(bucket, user_id):
         return jsonify(create_response("user not authorized", False, "Unauthorized"))
 
-    serialized_movies = list_all_movies(bucket)
+    serialized_movies = get_all_movies(bucket)
     return jsonify(serialized_movies)
 
 
