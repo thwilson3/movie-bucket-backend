@@ -100,11 +100,38 @@ def get_bucket(bucket_id: int):
     return Bucket.query.get(bucket_id)
 
 
+def get_movie(movie_id: int):
+    """Find movie and return the instance"""
+
+    return Movie.query.get(movie_id)
+
+
 def list_all_movies(bucket: Bucket) -> List[Dict]:
     """Serializes all movies tied to a bucket"""
 
     serialized_movies = [movie.serialize() for movie in bucket.movies]
     return serialized_movies
+
+
+def toggle_movie_watch_status(movie: Movie):
+    """Toggles movie status"""
+    try:
+        movie.is_watched = not movie.is_watched
+        db.session.add(movie)
+        db.session.commit()
+
+    except IntegrityError as err:
+        db.session.rollback()
+        raise err
+
+    response = create_response("movie patched successfully", True, "OK")
+    response.update(
+        {
+            "movie": movie.serialize()
+        }
+    )
+
+    return response
 
 
 def list_all_buckets(user: User) -> List[Dict]:
@@ -241,4 +268,5 @@ def performance_timer(func):
         execution_time = end_time - start_time
         print(f"{func.__name__} took {execution_time:.4f} seconds")
         return result
+
     return wrapper

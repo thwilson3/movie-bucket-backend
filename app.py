@@ -12,6 +12,8 @@ from helpers import (
     add_movie_to_bucket,
     delete_bucket,
     list_all_buckets,
+    get_movie,
+    toggle_movie_watch_status,
     list_all_movies,
     create_response,
     create_bucket_link,
@@ -277,6 +279,33 @@ def add_new_movie_to_bucket() -> jsonify:
     return jsonify(response)
 
 
+@app.patch("/users/buckets/movies")
+@login_required
+@performance_timer
+def update_movie_watch_status() -> jsonify:
+    """Update movie is_watched status"""
+
+    user_id = request.args.get("user_id", type=int)
+    bucket_id = request.args.get("bucket_id", type=int)
+    movie_id = request.args.get("movie_id", type=int)
+
+    bucket = get_bucket(bucket_id)
+    movie = get_movie(movie_id)
+
+    if bucket is None:
+        return jsonify(create_response("bucket not found", False, "Not Found"))
+
+    if movie is None:
+        return jsonify(create_response("movie not found", False, "Not Found"))
+
+    if not is_user_authorized(bucket, user_id):
+        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+
+    response = toggle_movie_watch_status(movie)
+
+    return jsonify(response)
+
+
 ########################################################
 ###------------------------------------------LINK ROUTES
 
@@ -315,3 +344,4 @@ def link_additional_users_to_bucket():
         return jsonify(create_response("invalid credentials", False, "Unauthorized"))
 
     return jsonify(response)
+
