@@ -69,9 +69,9 @@ def signup() -> jsonify:
 
     data = request.get_json()
 
-    username = data.get("username")
-    email = data.get("email")
-    password = data.get("password")
+    username: str = data.get("username")
+    email: str = data.get("email")
+    password: str = data.get("password")
 
     # Successful signup
     try:
@@ -103,8 +103,8 @@ def login() -> jsonify:
 
     data = request.get_json()
 
-    username = data.get("username")
-    password = data.get("password")
+    username: str = data.get("username")
+    password: str = data.get("password")
 
     user = User.query.filter_by(username=username).first()
 
@@ -198,8 +198,8 @@ def add_new_bucket(user_id: int) -> jsonify:
 def get_bucket_info() -> jsonify:
     """Get information in regards to single bucket"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
 
@@ -221,8 +221,8 @@ def get_bucket_info() -> jsonify:
 def delete_single_bucket() -> jsonify:
     """Deletes specific bucket"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
 
@@ -243,8 +243,8 @@ def delete_single_bucket() -> jsonify:
 def get_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
 
@@ -264,8 +264,8 @@ def get_all_movies_in_bucket() -> jsonify:
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
 
@@ -286,9 +286,9 @@ def add_new_movie_to_bucket() -> jsonify:
 def update_movie_watch_status() -> jsonify:
     """Update movie is_watched status"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
-    movie_id = request.args.get("movie_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
+    movie_id: int = request.args.get("movie_id", type=int)
 
     bucket = get_bucket(bucket_id)
     movie = get_movie(movie_id)
@@ -317,8 +317,8 @@ def update_movie_watch_status() -> jsonify:
 def invite_user_to_collaborate():
     """Generates invitation code for user to collaborate on a bucket"""
 
-    user_id = request.args.get("user_id", type=int)
-    bucket_id = request.args.get("bucket_id", type=int)
+    user_id: int = request.args.get("user_id", type=int)
+    bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
 

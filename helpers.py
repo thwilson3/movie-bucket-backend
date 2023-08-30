@@ -149,12 +149,12 @@ def create_bucket_link(bucket_id: int) -> Dict:
     return response
 
 
-def verify_and_link_users(data):
+def verify_and_link_users(data: Dict[str, any]):
     """Verify code matches, associate new user with bucket, clean up link"""
 
-    user_id = data.get("user_id")
-    bucket_id = data.get("bucket_id")
-    invite_code = data.get("invite_code")
+    user_id: int = data.get("user_id")
+    bucket_id: int = data.get("bucket_id")
+    invite_code: str = data.get("invite_code")
 
     link = BucketLink.query.filter_by(bucket_id=bucket_id).first()
 
