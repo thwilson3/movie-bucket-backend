@@ -2,13 +2,20 @@ import os
 import requests
 
 from dotenv import load_dotenv
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import LoginManager, login_user, logout_user
 from sqlalchemy.exc import IntegrityError
 from flask_migrate import Migrate
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+    JWTManager,
+)
 from helpers import (
     get_bucket,
     add_bucket,
     get_user,
+    get_auth_users,
     is_user_authorized,
     add_movie_to_bucket,
     delete_bucket,
@@ -34,7 +41,14 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
 app.config["API_KEY"] = os.environ["API_KEY"]
 app.config["AUTH_KEY"] = os.environ["AUTH_KEY"]
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.config["JWT_TOKEN_LOCATION"] = [
+    "headers",
+    "cookies",
+]  # Add the token locations you want to support
+
+jwt = JWTManager(app)
 
 connect_db(app)
 
@@ -109,17 +123,19 @@ def login() -> jsonify:
     user = User.query.filter_by(username=username).first()
 
     if user and user.authenticate(username=username, password=password):
-        # Successful login
+        access_token = create_access_token(identity=user.id)
         login_user(user)
         response = create_response("logged in", True, "OK")
+        response.update({"access_token": access_token})
     else:
         # Failed login
         response = create_response("invalid credentials", False, "Unauthorized")
 
     return jsonify(response)
 
+
 @app.post("/logout")
-@login_required
+@jwt_required()
 def logout() -> jsonify:
     """Clears session and logs user out"""
 
@@ -158,24 +174,42 @@ def list_search_results() -> jsonify:
 ###---------------------------------------BUCKET ROUTES
 
 
-@app.get("/users/<int:user_id>/buckets")
-@login_required
+@app.get("/users/buckets")
+@jwt_required()
 @performance_timer
-def get_all_user_buckets(user_id: int) -> jsonify:
-    """Returns JSON list of all buckets associated with a user"""
+def get_user_buckets_or_bucket_info() -> jsonify:
+    """Returns JSON list of all buckets associated with the authenticated user
+    or information about a single bucket if bucket_id is provided in query params"""
 
+    user_id: int = get_jwt_identity()
+    bucket_id: int = request.args.get("bucket_id", type=int)
+
+    # If bucket_id is provided, retrieve information about a single bucket
+    if bucket_id is not None:
+        bucket = get_bucket(bucket_id)
+        if bucket is None:
+            return jsonify(create_response("bucket not found", False, "Not Found"))
+
+        if not is_user_authorized(bucket, user_id):
+            return jsonify(
+                create_response("user not authorized", False, "Unauthorized")
+            )
+
+        users = get_auth_users(bucket)
+        response = {"bucket": bucket.serialize(), "authorized_users": users}
+        return jsonify(response)
+
+    # Otherwise, retrieve all user buckets
     user = get_user(user_id=user_id)
-
     if user is None:
         return jsonify(create_response("user not found", False, "Not Found"))
 
     serialized_buckets = get_all_buckets(user)
-
     return jsonify(serialized_buckets)
 
 
 @app.post("/users/<int:user_id>/buckets")
-@login_required
+@jwt_required()
 @performance_timer
 def add_new_bucket(user_id: int) -> jsonify:
     """Adds a new bucket and returns JSON"""
@@ -192,31 +226,8 @@ def add_new_bucket(user_id: int) -> jsonify:
     return jsonify(response)
 
 
-@app.get("/users/buckets")
-@login_required
-@performance_timer
-def get_bucket_info() -> jsonify:
-    """Get information in regards to single bucket"""
-
-    user_id: int = request.args.get("user_id", type=int)
-    bucket_id: int = request.args.get("bucket_id", type=int)
-
-    bucket = get_bucket(bucket_id)
-
-    if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
-
-    if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
-
-    users = [user.serialize() for user in bucket.users]
-    response = {"bucket": bucket.serialize(), "authorized_users": users}
-
-    return jsonify(response)
-
-
 @app.delete("/users/buckets")
-@login_required
+@jwt_required()
 @performance_timer
 def delete_single_bucket() -> jsonify:
     """Deletes specific bucket"""
@@ -238,7 +249,7 @@ def delete_single_bucket() -> jsonify:
 
 
 @app.get("/users/buckets/movies")
-@login_required
+@jwt_required()
 @performance_timer
 def get_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
@@ -259,7 +270,7 @@ def get_all_movies_in_bucket() -> jsonify:
 
 
 @app.post("/users/buckets/movies")
-@login_required
+@jwt_required()
 @performance_timer
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
@@ -281,7 +292,7 @@ def add_new_movie_to_bucket() -> jsonify:
 
 
 @app.patch("/users/buckets/movies")
-@login_required
+@jwt_required()
 @performance_timer
 def update_movie_watch_status() -> jsonify:
     """Update movie is_watched status"""
@@ -312,7 +323,7 @@ def update_movie_watch_status() -> jsonify:
 
 
 @app.get("/users/buckets/invite")
-@login_required
+@jwt_required()
 @performance_timer
 def invite_user_to_collaborate():
     """Generates invitation code for user to collaborate on a bucket"""
@@ -334,7 +345,7 @@ def invite_user_to_collaborate():
 
 
 @app.post("/users/buckets/link")
-@login_required
+@jwt_required()
 @performance_timer
 def link_additional_users_to_bucket():
     data = request.get_json()
@@ -345,4 +356,3 @@ def link_additional_users_to_bucket():
         return jsonify(create_response("invalid credentials", False, "Unauthorized"))
 
     return jsonify(response)
-
