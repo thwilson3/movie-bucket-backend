@@ -250,7 +250,7 @@ def delete_single_bucket() -> jsonify:
 def get_all_movies_in_bucket() -> jsonify:
     """Lists all movies that exist inside of a bucket"""
 
-    user_id: int = request.args.get("user_id", type=int)
+    user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
@@ -271,7 +271,7 @@ def get_all_movies_in_bucket() -> jsonify:
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
 
-    user_id: int = request.args.get("user_id", type=int)
+    user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
@@ -293,7 +293,7 @@ def add_new_movie_to_bucket() -> jsonify:
 def update_movie_watch_status() -> jsonify:
     """Update movie is_watched status"""
 
-    user_id: int = request.args.get("user_id", type=int)
+    user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
     movie_id: int = request.args.get("movie_id", type=int)
 
@@ -321,10 +321,10 @@ def update_movie_watch_status() -> jsonify:
 @app.get("/users/buckets/invite")
 @jwt_required()
 @performance_timer
-def invite_user_to_collaborate():
+def invite_user_to_collaborate() -> jsonify:
     """Generates invitation code for user to collaborate on a bucket"""
 
-    user_id: int = request.args.get("user_id", type=int)
+    user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
 
     bucket = get_bucket(bucket_id)
@@ -343,7 +343,7 @@ def invite_user_to_collaborate():
 @app.post("/users/buckets/link")
 @jwt_required()
 @performance_timer
-def link_additional_users_to_bucket():
+def link_additional_users_to_bucket() -> jsonify:
     """Verifies invite code and adds user to auth users for bucket"""
 
     data = request.get_json()
