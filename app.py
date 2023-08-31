@@ -201,10 +201,8 @@ def get_user_buckets_or_bucket_info() -> jsonify:
 
     # Otherwise, retrieve all user buckets
     user = get_user(user_id=user_id)
-    if user is None:
-        return jsonify(create_response("user not found", False, "Not Found"))
-
     serialized_buckets = get_all_buckets(user)
+
     return jsonify(serialized_buckets)
 
 
@@ -214,13 +212,10 @@ def get_user_buckets_or_bucket_info() -> jsonify:
 def add_new_bucket(user_id: int) -> jsonify:
     """Adds a new bucket and returns JSON"""
 
+    user_id: int = get_jwt_identity()
+
     user = get_user(user_id=user_id)
-
-    if user is None:
-        return jsonify(create_response("user not found", False, "Not Found"))
-
     data = request.get_json()
-
     response = add_bucket(user, data)
 
     return jsonify(response)
