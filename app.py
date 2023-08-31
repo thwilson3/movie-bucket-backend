@@ -14,6 +14,7 @@ from flask_jwt_extended import (
 from helpers import (
     get_bucket,
     add_bucket,
+    add_public_bucket,
     get_user,
     get_auth_users,
     is_user_authorized,
@@ -206,10 +207,10 @@ def get_user_buckets_or_bucket_info() -> jsonify:
     return jsonify(serialized_buckets)
 
 
-@app.post("/users/<int:user_id>/buckets")
+@app.post("/users/buckets")
 @jwt_required()
 @performance_timer
-def add_new_bucket(user_id: int) -> jsonify:
+def add_new_bucket() -> jsonify:
     """Adds a new bucket and returns JSON"""
 
     user_id: int = get_jwt_identity()
@@ -351,5 +352,19 @@ def link_additional_users_to_bucket():
 
     if not response:
         return jsonify(create_response("invalid credentials", False, "Unauthorized"))
+
+    return jsonify(response)
+
+
+########################################################
+###----------------------------------------PUBLIC ROUTES
+
+@app.post("/public/buckets")
+@performance_timer
+def add_new_public_bucket() -> jsonify:
+    """Adds a new bucket and returns JSON"""
+
+    data = request.get_json()
+    response = add_public_bucket(data)
 
     return jsonify(response)

@@ -244,6 +244,21 @@ def add_bucket(user, data):
     return response
 
 
+def add_public_bucket(data):
+    """Add public bucket and create a response"""
+
+    new_bucket = create_bucket(
+        bucket_name=data.get("bucket_name"),
+        genre=data.get("genre"),
+        description=data.get("description"),
+    )
+
+    response = create_response("bucket accepted", True, "Accepted")
+    response.update({"bucket": new_bucket.serialize()})
+
+    return response
+
+
 def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
     """Add/associate movie to the bucket and create a response"""
 
