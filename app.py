@@ -343,6 +343,8 @@ def invite_user_to_collaborate():
 @jwt_required()
 @performance_timer
 def link_additional_users_to_bucket():
+    """Verifies invite code and adds user to auth users for bucket"""
+
     data = request.get_json()
 
     response = verify_and_link_users(data)
