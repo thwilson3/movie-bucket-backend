@@ -110,7 +110,9 @@ def toggle_movie_watch_status(movie: Movie):
 
         raise err(error_message)
 
-    response = create_response("movie patched successfully", True, "OK")
+    response = create_response(
+        message="movie patched successfully", success=True, status="OK"
+    )
     response.update({"movie": movie.serialize()})
 
     return response
@@ -119,7 +121,7 @@ def toggle_movie_watch_status(movie: Movie):
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
-    #TODO: could replace link instead of deleting old links
+    # TODO: could replace link instead of deleting old links
     clean_up_links(bucket_id)
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
@@ -141,7 +143,9 @@ def create_bucket_link(bucket_id: int) -> Dict:
 
         raise err(error_message)
 
-    response = create_response("invite code created", True, "Accepted")
+    response = create_response(
+        message="invite code created", success=True, status="Accepted"
+    )
     response.update(
         {
             "bucket_link": new_link.serialize(),
@@ -178,7 +182,9 @@ def verify_and_link_users(data: Dict[str, any]):
 
             users = get_auth_users(bucket)
 
-            response = create_response("user added to bucket", True, "OK")
+            response = create_response(
+                message="user added to bucket", success=True, status="OK"
+            )
             response.update({"bucket": bucket.serialize(), "authorized_users": users})
 
             return response
@@ -200,7 +206,7 @@ def delete_bucket(bucket: Bucket) -> Dict:
 
         raise err(error_message)
 
-    response = create_response("bucket deleted", True, "OK")
+    response = create_response(message="bucket deleted", success=True, status="OK")
 
     return response
 
@@ -240,7 +246,9 @@ def add_bucket(user, data):
 
     users = get_auth_users(new_bucket)
 
-    response = create_response("bucket accepted", True, "Accepted")
+    response = create_response(
+        message="bucket accepted", success=True, status="Accepted"
+    )
     response.update({"bucket": new_bucket.serialize(), "authorized_users": users})
 
     return response
@@ -255,7 +263,9 @@ def add_public_bucket(data):
         description=data.get("description"),
     )
 
-    response = create_response("bucket accepted", True, "Accepted")
+    response = create_response(
+        message="bucket accepted", success=True, status="Accepted"
+    )
     response.update({"bucket": new_bucket.serialize()})
 
     return response
@@ -275,7 +285,9 @@ def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
 
     associate_movie_with_bucket(bucket_id=bucket.id, movie_id=new_movie.id)
 
-    response = create_response("movie accepted", True, "Accepted")
+    response = create_response(
+        message="movie accepted", success=True, status="Accepted"
+    )
     response.update(
         {
             "bucket": bucket.serialize(),

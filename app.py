@@ -99,14 +99,16 @@ def signup() -> jsonify:
         db.session.commit()
         login_user(user)
 
-        response = create_response("user signed up", True, "OK")
+        response = create_response(message="user signed up", success=True, status="OK")
 
         return jsonify(response)
 
     # Failed signup
     except IntegrityError as err:
         error_message = err.orig.diag.message_detail
-        response = create_response(f"{error_message}", False, "Bad Request")
+        response = create_response(
+            message=f"{error_message}", success=False, status="Bad Request"
+        )
 
         return jsonify(response)
 
@@ -130,7 +132,9 @@ def login() -> jsonify:
         response.update({"access_token": access_token})
     else:
         # Failed login
-        response = create_response("invalid credentials", False, "Unauthorized")
+        response = create_response(
+            message="invalid credentials", success=False, status="Unauthorized"
+        )
 
     return jsonify(response)
 
@@ -142,7 +146,9 @@ def logout() -> jsonify:
 
     logout_user()
 
-    return jsonify(create_response("logout successful", True, "OK"))
+    return jsonify(
+        create_response(message="logout successful", success=True, status="OK")
+    )
 
 
 ########################################################
@@ -161,7 +167,7 @@ def list_search_results() -> jsonify:
     response = requests.get(url, params=params, headers=HEADERS)
     data = response.json()
 
-    #TODO: this can exist outside of the function
+    # TODO: this can exist outside of the function
     target_fields = ["title", "poster_path", "release_date", "overview"]
 
     filtered_results = [
@@ -183,7 +189,7 @@ def get_user_buckets_or_bucket_info() -> jsonify:
     """Returns JSON list of all buckets associated with the authenticated user
     or information about a single bucket if bucket_id is provided in query params"""
 
-    #TODO: might be better to leave types off variable declaration
+    # TODO: might be better to leave types off variable declaration
     user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
 
@@ -191,11 +197,17 @@ def get_user_buckets_or_bucket_info() -> jsonify:
     if bucket_id is not None:
         bucket = get_bucket(bucket_id)
         if bucket is None:
-            return jsonify(create_response("bucket not found", False, "Not Found"))
+            return jsonify(
+                create_response(
+                    message="bucket not found", success=False, status="Not Found"
+                )
+            )
 
         if not is_user_authorized(bucket, user_id):
             return jsonify(
-                create_response("user not authorized", False, "Unauthorized")
+                create_response(
+                    message="user not authorized", success=False, status="Unauthorized"
+                )
             )
 
         users = get_auth_users(bucket)
@@ -236,10 +248,18 @@ def delete_single_bucket() -> jsonify:
     bucket = get_bucket(bucket_id)
 
     if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
 
     response = delete_bucket(bucket)
 
@@ -258,10 +278,18 @@ def get_all_movies_in_bucket() -> jsonify:
     bucket = get_bucket(bucket_id)
 
     if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
 
     serialized_movies = get_all_movies(bucket)
     return jsonify(serialized_movies)
@@ -279,10 +307,18 @@ def add_new_movie_to_bucket() -> jsonify:
     bucket = get_bucket(bucket_id)
 
     if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
 
     data = request.get_json()
     response = add_movie_to_bucket(bucket, data)
@@ -303,13 +339,25 @@ def update_movie_watch_status() -> jsonify:
     movie = get_movie(movie_id)
 
     if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
 
     if movie is None:
-        return jsonify(create_response("movie not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="movie not found", success=False, status="Not Found"
+            )
+        )
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
 
     response = toggle_movie_watch_status(movie)
 
@@ -332,10 +380,18 @@ def invite_user_to_collaborate() -> jsonify:
     bucket = get_bucket(bucket_id)
 
     if bucket is None:
-        return jsonify(create_response("bucket not found", False, "Not Found"))
+        return jsonify(
+            create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
 
     if not is_user_authorized(bucket, user_id):
-        return jsonify(create_response("user not authorized", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
 
     response = create_bucket_link(bucket_id)
 
@@ -353,7 +409,11 @@ def link_additional_users_to_bucket() -> jsonify:
     response = verify_and_link_users(data)
 
     if not response:
-        return jsonify(create_response("invalid credentials", False, "Unauthorized"))
+        return jsonify(
+            create_response(
+                message="invalid credentials", success=False, status="Unauthorized"
+            )
+        )
 
     return jsonify(response)
 
@@ -361,8 +421,9 @@ def link_additional_users_to_bucket() -> jsonify:
 ########################################################
 ###----------------------------------------PUBLIC ROUTES
 
-#TODO: consider query params for public bucket id/easier for sharing
-#TODO: could add usernames to anon users via cookies/session/local storage
+
+# TODO: consider url params for public bucket id/easier for sharing
+# TODO: could add usernames to anon users via cookies/session/local storage
 @app.post("/public/buckets")
 @performance_timer
 def add_new_public_bucket() -> jsonify:
