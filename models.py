@@ -234,6 +234,7 @@ class BucketLink(db.Model):
         return data
 
 
+#TODO: change to Users_Buckets
 class User_Buckets(db.Model):
     """Join table between users and buckets."""
 

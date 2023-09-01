@@ -119,6 +119,7 @@ def toggle_movie_watch_status(movie: Movie):
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
+    #TODO: could replace link instead of deleting old links
     clean_up_links(bucket_id)
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
@@ -210,6 +211,7 @@ def clean_up_links(bucket_id: int) -> bool:
     for link in existing_links:
         try:
             db.session.delete(link)
+            db.session.rollback()
 
         except IntegrityError as err:
             db.session.rollback()

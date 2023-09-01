@@ -161,6 +161,7 @@ def list_search_results() -> jsonify:
     response = requests.get(url, params=params, headers=HEADERS)
     data = response.json()
 
+    #TODO: this can exist outside of the function
     target_fields = ["title", "poster_path", "release_date", "overview"]
 
     filtered_results = [
@@ -182,6 +183,7 @@ def get_user_buckets_or_bucket_info() -> jsonify:
     """Returns JSON list of all buckets associated with the authenticated user
     or information about a single bucket if bucket_id is provided in query params"""
 
+    #TODO: might be better to leave types off variable declaration
     user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
 
@@ -359,6 +361,8 @@ def link_additional_users_to_bucket() -> jsonify:
 ########################################################
 ###----------------------------------------PUBLIC ROUTES
 
+#TODO: consider query params for public bucket id/easier for sharing
+#TODO: could add usernames to anon users via cookies/session/local storage
 @app.post("/public/buckets")
 @performance_timer
 def add_new_public_bucket() -> jsonify:
