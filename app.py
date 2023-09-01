@@ -155,7 +155,7 @@ def logout() -> jsonify:
 ###-------------------------------------API SEARCH ROUTE
 
 
-@app.route("/api/search")
+@app.route("/api/search/movies")
 def list_search_results() -> jsonify:
     """Returns JSON list of search results"""
 
