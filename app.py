@@ -245,6 +245,38 @@ def delete_single_bucket() -> jsonify:
     return jsonify(response)
 
 
+@app.patch("/users/buckets")
+@jwt_required()
+@helpers.performance_timer
+def update_bucket_info() -> jsonify:
+    "Patches bucket resource"
+
+    user_id: int = get_jwt_identity()
+    bucket_id: int = request.args.get("bucket_id", type=int)
+    data = request.get_json()
+
+    bucket = helpers.get_bucket(bucket_id)
+
+    if bucket is None:
+        return jsonify(
+            helpers.create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
+
+    if not helpers.is_user_authorized(bucket, user_id):
+        return jsonify(
+            helpers.create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
+
+    response = helpers.update_bucket(bucket, data)
+
+    return jsonify(response)
+
+
+
 @app.get("/users/buckets/movies")
 @jwt_required()
 @helpers.performance_timer

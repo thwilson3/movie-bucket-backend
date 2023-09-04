@@ -8,6 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from typing import Dict, List
 from datetime import datetime, timedelta
 
+BUCKET_FIELDS = ["bucket_name", "genre", "description"]
+USER_FIELDS = ["username", "email", "password"]
 
 ########################################################
 ###-------------------------------------------DB HELPERS
@@ -32,6 +34,27 @@ def create_bucket(bucket_name: str, genre: str, description: str) -> Bucket:
         error_message = err.orig.diag.message_detail
 
         raise err(error_message)
+
+
+def update_bucket(bucket: Bucket, data: Dict):
+    """Update bucket resource and commit to db"""
+
+    for field in BUCKET_FIELDS:
+        if field in data:
+            setattr(bucket, field, data[field])
+
+    try:
+        db.session.commit()
+
+    except IntegrityError as err:
+        db.session.rollback()
+
+        error_message = err.orig.diag.message_detail
+
+        raise err(error_message)
+
+    return create_response(message="bucket updated", success=True, status="OK")
+
 
 
 def create_movie(
@@ -121,7 +144,6 @@ def toggle_movie_watch_status(movie: Movie):
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
-    # TODO: could replace link instead of deleting old links
     clean_up_links(bucket_id)
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
