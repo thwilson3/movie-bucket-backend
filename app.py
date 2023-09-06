@@ -44,6 +44,13 @@ HEADERS = {"accept": "application/json", "Authorization": f"Bearer {AUTH_KEY}"}
 BASE_API_URL = "https://api.themoviedb.org/3/"
 TARGET_FIELDS_FOR_API = ["title", "poster_path", "release_date", "overview"]
 
+MOVIE_FIELD_MAP = {
+    "title": "title",
+    "poster_path": "image",
+    "release_date": "release_date",
+    "overview": "bio",
+}
+
 
 ########################################################
 ###---------------------------------------SIGN-UP ROUTES
@@ -150,7 +157,7 @@ def list_search_results() -> jsonify:
     data = response.json()
 
     filtered_results = [
-        {field: result.get(field) for field in TARGET_FIELDS_FOR_API}
+        {MOVIE_FIELD_MAP[field]: result.get(field) for field in TARGET_FIELDS_FOR_API}
         for result in data["results"]
     ]
 
@@ -272,9 +279,9 @@ def update_bucket_info() -> jsonify:
         )
 
     response = helpers.update_bucket(bucket, data)
+    response.update({"bucket": bucket.serialize()})
 
     return jsonify(response)
-
 
 
 @app.get("/users/buckets/movies")
