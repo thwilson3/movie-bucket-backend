@@ -389,27 +389,6 @@ def generate_invite_code(length: int) -> str:
     return "".join(random.choice(characters) for _ in range(length))
 
 
-# @celery.task
-# def clean_up_expired_links():
-#     """Automated function to clean up expired links"""
-
-#     expired_links = BucketLink.query.filter(BucketLink.expiration_date < datetime.now())
-#     link_amount = len(expired_links)
-#     clean_up_links(links=expired_links)
-
-#     print(
-#         f"clean_up_expired_links ran at {datetime.now()}, {link_amount} links removed."
-#     )
-
-#     pass
-
-# def test_celery_task():
-#     result = clean_up_expired_links.apply_async()
-#     task_result = result.get()
-#     print(task_result)
-
-
-
 def performance_timer(func):
     """Decorator to help time function execution"""
 
