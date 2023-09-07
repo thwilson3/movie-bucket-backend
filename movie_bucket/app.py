@@ -15,6 +15,7 @@ from flask_jwt_extended import (
 
 from typing import Optional
 from flask import Flask, request, jsonify
+from celery import Celery
 from models import db, connect_db, User
 
 load_dotenv()
@@ -37,6 +38,11 @@ migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+celery = Celery(
+    'movie_bucket',
+    broker='redis://localhost',
+)
 
 AUTH_KEY = app.config["AUTH_KEY"]
 

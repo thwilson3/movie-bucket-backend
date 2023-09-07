@@ -5,12 +5,12 @@ import functools
 
 from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User, BucketLink
 from sqlalchemy.exc import IntegrityError
-from celery_config import celery
 from typing import Dict, List
 from datetime import datetime, timedelta
 
 BUCKET_FIELDS = ["bucket_name", "genre", "description"]
 USER_FIELDS = ["username", "email", "password"]
+
 
 ########################################################
 ###-------------------------------------------DB HELPERS
@@ -389,16 +389,25 @@ def generate_invite_code(length: int) -> str:
     return "".join(random.choice(characters) for _ in range(length))
 
 
-@celery.task
-def clean_up_expired_links():
-    expired_links = BucketLink.query.filter(BucketLink.expiration_date > datetime.now())
-    link_amount = len(expired_links)
-    clean_up_links(links=expired_links)
+# @celery.task
+# def clean_up_expired_links():
+#     """Automated function to clean up expired links"""
 
-    print(
-        f"clean_up_expired_links ran at {datetime.now()}, {link_amount} links removed."
-    )
-    return
+#     expired_links = BucketLink.query.filter(BucketLink.expiration_date < datetime.now())
+#     link_amount = len(expired_links)
+#     clean_up_links(links=expired_links)
+
+#     print(
+#         f"clean_up_expired_links ran at {datetime.now()}, {link_amount} links removed."
+#     )
+
+#     pass
+
+# def test_celery_task():
+#     result = clean_up_expired_links.apply_async()
+#     task_result = result.get()
+#     print(task_result)
+
 
 
 def performance_timer(func):
