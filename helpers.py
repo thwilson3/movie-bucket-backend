@@ -5,6 +5,7 @@ import functools
 
 from models import db, Bucket, User_Buckets, Movie, Buckets_Movies, User, BucketLink
 from sqlalchemy.exc import IntegrityError
+from celery_config import celery
 from typing import Dict, List
 from datetime import datetime, timedelta
 
@@ -54,7 +55,6 @@ def update_bucket(bucket: Bucket, data: Dict):
         raise err(error_message)
 
     return create_response(message="bucket updated", success=True, status="OK")
-
 
 
 def create_movie(
@@ -144,7 +144,8 @@ def toggle_movie_watch_status(movie: Movie):
 def create_bucket_link(bucket_id: int) -> Dict:
     """Creates instance of BucketLink and stores in db"""
 
-    clean_up_links(bucket_id)
+    existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
+    clean_up_links(existing_links)
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
 
@@ -233,10 +234,8 @@ def delete_bucket(bucket: Bucket) -> Dict:
     return response
 
 
-def clean_up_links(bucket_id: int) -> bool:
-    existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
-
-    for link in existing_links:
+def clean_up_links(links: List) -> bool:
+    for link in links:
         try:
             db.session.delete(link)
             db.session.rollback()
@@ -388,6 +387,18 @@ def generate_invite_code(length: int) -> str:
 
     characters = string.ascii_uppercase + string.digits
     return "".join(random.choice(characters) for _ in range(length))
+
+
+@celery.task
+def clean_up_expired_links():
+    expired_links = BucketLink.query.filter(BucketLink.expiration_date > datetime.now())
+    link_amount = len(expired_links)
+    clean_up_links(links=expired_links)
+
+    print(
+        f"clean_up_expired_links ran at {datetime.now()}, {link_amount} links removed."
+    )
+    return
 
 
 def performance_timer(func):
