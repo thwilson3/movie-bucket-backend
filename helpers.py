@@ -238,7 +238,7 @@ def clean_up_links(links: List) -> bool:
     for link in links:
         try:
             db.session.delete(link)
-            db.session.rollback()
+            db.session.commit()
 
         except IntegrityError as err:
             db.session.rollback()

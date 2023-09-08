@@ -3,13 +3,20 @@ from helpers import clean_up_links
 from models import BucketLink
 from datetime import datetime
 
+
 @celery.task()
 def clean_up_expired_links():
     """Automated function to clean up expired links"""
 
-    #TODO: link amount is always coming out to 2
-    expired_links = BucketLink.query.filter(BucketLink.expiration_date < datetime.now())
-    link_amount = expired_links.count()
+    current_time = datetime.now()
+
+    expired_links = BucketLink.query.filter(
+        BucketLink.expiration_date < current_time
+    ).all()
+
+    print("expired_links", expired_links)
+
+    link_amount = len(expired_links)
     clean_up_links(links=expired_links)
 
     print(
