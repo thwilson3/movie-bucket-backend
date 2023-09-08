@@ -27,6 +27,7 @@ app.config["SQLALCHEMY_ECHO"] = False
 app.config["API_KEY"] = os.environ["API_KEY"]
 app.config["AUTH_KEY"] = os.environ["AUTH_KEY"]
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
+app.config["ADMIN_TOKEN"] = os.environ["ADMIN_TOKEN"]
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
 
