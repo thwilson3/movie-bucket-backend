@@ -146,6 +146,7 @@ def create_bucket_link(bucket_id: int) -> Dict:
 
     existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
     clean_up_links(existing_links)
+
     invite_code = generate_invite_code(5)
     expiration_date = datetime.now() + timedelta(minutes=5)
 
@@ -235,6 +236,8 @@ def delete_bucket(bucket: Bucket) -> Dict:
 
 
 def clean_up_links(links: List) -> bool:
+    """Removes any links gives from db"""
+
     for link in links:
         try:
             db.session.delete(link)
