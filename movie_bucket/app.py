@@ -65,6 +65,8 @@ MOVIE_FIELD_MAP = {
 
 @login_manager.user_loader
 def load_user(user_id: int) -> Optional[User]:
+    """flask login user loader"""
+
     user = User.query.get(int(user_id))
     if user:
         return user
