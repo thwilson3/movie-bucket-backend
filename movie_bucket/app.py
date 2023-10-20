@@ -17,6 +17,7 @@ from typing import Optional
 from flask import Flask, request, jsonify
 from celery import Celery
 from models import db, connect_db, User
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -44,6 +45,8 @@ celery = Celery(
     'movie_bucket',
     broker='redis://localhost',
 )
+
+cors = CORS(app, origins="http://localhost:5173/*")
 
 AUTH_KEY = app.config["AUTH_KEY"]
 
