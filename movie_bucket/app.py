@@ -96,11 +96,12 @@ def signup() -> jsonify:
         )
 
         db.session.commit()
+        access_token = create_access_token(identity=user.id)
         login_user(user)
-
         response = helpers.create_response(
             message="user signed up", success=True, status="OK"
         )
+        response.update({"access_token": access_token, "user": user.serialize()})
 
         return jsonify(response)
 
@@ -130,7 +131,7 @@ def login() -> jsonify:
         access_token = create_access_token(identity=user.id)
         login_user(user)
         response = helpers.create_response("logged in", True, "OK")
-        response.update({"access_token": access_token})
+        response.update({"access_token": access_token, "user": user.serialize()})
     else:
         # Failed login
         response = helpers.create_response(
