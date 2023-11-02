@@ -46,7 +46,7 @@ celery = Celery(
     broker='redis://localhost',
 )
 
-cors = CORS(app, origins="http://localhost:5173/*")
+cors = CORS(app, origins="http://localhost:5173*")
 
 AUTH_KEY = app.config["AUTH_KEY"]
 
@@ -366,6 +366,8 @@ def update_movie_watch_status() -> jsonify:
     bucket_id: int = request.args.get("bucket_id", type=int)
     movie_id: int = request.args.get("movie_id", type=int)
 
+    print("in patch route", bucket_id, movie_id)
+
     bucket = helpers.get_bucket(bucket_id)
     movie = helpers.get_movie(movie_id)
 
@@ -391,6 +393,48 @@ def update_movie_watch_status() -> jsonify:
         )
 
     response = helpers.toggle_movie_watch_status(movie)
+
+    return jsonify(response)
+
+@app.delete("/users/buckets/movies")
+@jwt_required()
+@helpers.performance_timer
+def delete_movie() -> jsonify:
+    """Delete movie"""
+
+    user_id: int = get_jwt_identity()
+    bucket_id: int = request.args.get("bucket_id", type=int)
+    movie_id: int = request.args.get("movie_id", type=int)
+
+    print("bucket_id", bucket_id, "movie_id", movie_id)
+
+    bucket = helpers.get_bucket(bucket_id)
+    movie = helpers.get_movie(movie_id)
+
+    print("bucket", bucket, movie)
+
+    if bucket is None:
+        return jsonify(
+            helpers.create_response(
+                message="bucket not found", success=False, status="Not Found"
+            )
+        )
+
+    if movie is None:
+        return jsonify(
+            helpers.create_response(
+                message="movie not found", success=False, status="Not Found"
+            )
+        )
+
+    if not helpers.is_user_authorized(bucket, user_id):
+        return jsonify(
+            helpers.create_response(
+                message="user not authorized", success=False, status="Unauthorized"
+            )
+        )
+
+    response = helpers.delete_movie(movie)
 
     return jsonify(response)
 
