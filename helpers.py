@@ -84,6 +84,24 @@ def create_movie(
 
         raise err(error_message)
 
+def delete_movie(movie: Movie) -> Dict:
+    """Delete a movie and build a response"""
+
+    try:
+        db.session.delete(movie)
+        db.session.commit()
+
+    except IntegrityError as err:
+        db.session.rollback()
+
+        error_message = err.orig.diag.message_detail
+
+        raise err(error_message)
+
+    response = create_response(message="movie deleted", success=True, status="OK")
+
+    return response
+
 
 def associate_user_with_bucket(user_id: int, bucket_id: int) -> bool:
     """Create association between user and newly made bucket"""
