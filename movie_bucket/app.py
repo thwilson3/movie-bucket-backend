@@ -305,6 +305,7 @@ def get_all_movies_in_bucket() -> jsonify:
 
     user_id: int = get_jwt_identity()
     bucket_id: int = request.args.get("bucket_id", type=int)
+    print("get all buckets | bucket_id", bucket_id)
 
     bucket = helpers.get_bucket(bucket_id)
 
@@ -362,9 +363,11 @@ def add_new_movie_to_bucket() -> jsonify:
 def update_movie_watch_status() -> jsonify:
     """Update movie is_watched status"""
 
+    data = request.get_json()
+
     user_id: int = get_jwt_identity()
-    bucket_id: int = request.args.get("bucket_id", type=int)
-    movie_id: int = request.args.get("movie_id", type=int)
+    bucket_id: str = data.get("bucket_id")
+    movie_id: str = data.get("movie_id")
 
     print("in patch route", bucket_id, movie_id)
 
@@ -402,11 +405,11 @@ def update_movie_watch_status() -> jsonify:
 def delete_movie() -> jsonify:
     """Delete movie"""
 
-    user_id: int = get_jwt_identity()
-    bucket_id: int = request.args.get("bucket_id", type=int)
-    movie_id: int = request.args.get("movie_id", type=int)
+    data = request.get_json()
 
-    print("bucket_id", bucket_id, "movie_id", movie_id)
+    user_id: int = get_jwt_identity()
+    bucket_id: str = data.get("bucket_id")
+    movie_id: str = data.get("movie_id")
 
     bucket = helpers.get_bucket(bucket_id)
     movie = helpers.get_movie(movie_id)
