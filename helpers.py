@@ -165,7 +165,7 @@ def create_bucket_link(bucket_id: int) -> Dict:
     existing_links = BucketLink.query.filter_by(bucket_id=bucket_id).all()
     clean_up_links(existing_links)
 
-    invite_code = generate_invite_code(5)
+    invite_code = generate_invite_code(6)
     expiration_date = datetime.now() + timedelta(minutes=5)
 
     try:
