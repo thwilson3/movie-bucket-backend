@@ -333,8 +333,10 @@ def get_all_movies_in_bucket() -> jsonify:
 def add_new_movie_to_bucket() -> jsonify:
     """Add a new movie to a bucket"""
 
+    data = request.get_json()
+
     user_id: int = get_jwt_identity()
-    bucket_id: int = request.args.get("bucket_id", type=int)
+    bucket_id: int = data.get("bucket_id")
 
     bucket = helpers.get_bucket(bucket_id)
 
