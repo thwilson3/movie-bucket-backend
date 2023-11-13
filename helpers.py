@@ -58,12 +58,19 @@ def update_bucket(bucket: Bucket, data: Dict):
 
 
 def create_movie(
-    title: str, image: str, release_date: str, runtime: str, genre: str, bio: str
+    id: str,
+    title: str,
+    image: str,
+    release_date: str,
+    runtime: str,
+    genre: str,
+    bio: str,
 ) -> Movie:
     """Create new Movie instance and add to database"""
 
     try:
         new_movie = Movie(
+            id=id,
             title=title,
             image=image,
             release_date=release_date,
@@ -83,6 +90,7 @@ def create_movie(
         error_message = err.orig.diag.message_detail
 
         raise err(error_message)
+
 
 def delete_movie(movie: Movie) -> Dict:
     """Delete a movie and build a response"""
@@ -317,6 +325,7 @@ def add_movie_to_bucket(bucket: Bucket, data: Dict) -> Dict:
     """Add/associate movie to the bucket and create a response"""
 
     new_movie = create_movie(
+        id=data.get("id"),
         title=data.get("title"),
         image=data.get("image"),
         release_date=data.get("release_date"),

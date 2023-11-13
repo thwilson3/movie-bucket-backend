@@ -52,9 +52,10 @@ AUTH_KEY = app.config["AUTH_KEY"]
 
 HEADERS = {"accept": "application/json", "Authorization": f"Bearer {AUTH_KEY}"}
 BASE_API_URL = "https://api.themoviedb.org/3/"
-TARGET_FIELDS_FOR_API = ["title", "poster_path", "release_date", "overview"]
+TARGET_FIELDS_FOR_API = ["id", "title", "poster_path", "release_date", "overview"]
 
 MOVIE_FIELD_MAP = {
+    "id": "id",
     "title": "title",
     "poster_path": "image",
     "release_date": "release_date",
@@ -241,10 +242,13 @@ def add_new_bucket() -> jsonify:
 def delete_single_bucket() -> jsonify:
     """Deletes specific bucket"""
 
-    user_id: int = request.args.get("user_id", type=int)
-    bucket_id: int = request.args.get("bucket_id", type=int)
+    data = request.get_json()
+
+    user_id: int = get_jwt_identity()
+    bucket_id: int = data.get("bucket_id")
 
     bucket = helpers.get_bucket(bucket_id)
+    print("bucket in delete", bucket)
 
     if bucket is None:
         return jsonify(
